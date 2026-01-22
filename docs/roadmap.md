@@ -1,4 +1,4 @@
-# Take More Profits (TMP) - Development Roadmap
+# Profit is Profit (PisP) - Development Roadmap
 
 ## Timeline Overview
 

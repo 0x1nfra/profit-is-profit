@@ -1,4 +1,4 @@
-# Profit is Profit (P is P) - Project Structure
+# Profit is Profit (PisP) - Project Structure
 
 ## 📁 Complete File Structure
 
@@ -145,6 +145,8 @@ profit-is-profit/
 
 ---
 
+<!-- FIXME: do we need these? -->
+
 ## 🗂️ Directory Purposes
 
 ### `/docs`
@@ -177,38 +179,6 @@ profit-is-profit/
 
 - All TypeScript interfaces and types
 - Keep database types separate from app types
-
----
-
-## 🎯 Current State (Day 1-2 Complete)
-
-### ✅ What's Built
-
-```
-src/
-├── app/
-│   ├── layout.tsx           ✅
-│   ├── page.tsx             ✅
-│   ├── globals.css          ✅
-│   └── health-check/
-│       └── page.tsx         ✅
-├── components/ui/           ✅ (7 components)
-├── lib/
-│   ├── supabase.ts          ✅
-│   └── utils.ts             ✅
-└── types/
-    ├── index.ts             ✅
-    └── database.ts          ✅
-```
-
-### 📅 Next Up (Day 3-4)
-
-```
-src/lib/
-├── tier-calculator.ts       ⏳ Next
-├── cashout-calculator.ts    ⏳ Next
-└── constants.ts             ⏳ Next
-```
 
 ---
 
@@ -246,66 +216,6 @@ src/lib/
 - **API Routes**: `route.ts` (Next.js convention)
 - **Pages**: `page.tsx` (Next.js convention)
 - **Types**: `index.ts` or `database.ts`
-
----
-
-## 📦 Import Path Aliases
-
-Use the `@/` alias for clean imports:
-
-```typescript
-// ✅ Good
-import { supabase } from "@/lib/supabase";
-import { Wallet } from "@/types";
-import { Button } from "@/components/ui/button";
-
-// ❌ Avoid
-import { supabase } from "../../lib/supabase";
-```
-
----
-
-## 🔍 Finding Things Quickly
-
-**Need to work on wallets?**
-
-```
-src/
-├── app/api/wallets/          # API endpoints
-├── components/wallet/        # UI components
-├── lib/services/wallet-service.ts  # Business logic
-└── lib/stores/wallet-store.ts      # State management
-```
-
-**Need to work on trades?**
-
-```
-src/
-├── app/api/trades/           # API endpoints
-├── components/trade/         # UI components
-├── lib/services/trade-service.ts   # Business logic
-└── lib/stores/trade-store.ts       # State management
-```
-
-**Need to work on goals?**
-
-```
-src/
-├── app/api/goals/            # API endpoints
-├── components/goal/          # UI components
-├── lib/services/goal-service.ts    # Business logic
-└── lib/stores/goal-store.ts        # State management
-```
-
----
-
-## 💡 Best Practices
-
-1. **Keep components small** - One responsibility per component
-2. **Business logic in /lib** - Never in components
-3. **API routes call services** - Don't put logic in routes
-4. **Types first** - Define interfaces before implementation
-5. **Test utilities** - Business logic is easiest to test
 
 ---
 
@@ -348,14 +258,3 @@ export async function updateWalletBalance(
 ```
 
 ---
-
-## 📝 Next Steps
-
-Now that you have this structure overview:
-
-1. ✅ You know where everything goes
-2. ✅ You can navigate the codebase easily
-3. ✅ You understand the file organization
-4. 🚀 Ready to build Day 3-4 features!
-
-\*\*Shall we start building the core business l

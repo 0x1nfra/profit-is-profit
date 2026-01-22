@@ -1,5 +1,5 @@
 // =============================================
-// Profit is Profit (P is P) - Type Definitions
+// Profit is Profit (PisP) - Type Definitions
 // src/types/index.ts
 // =============================================
 

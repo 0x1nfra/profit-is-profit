@@ -1,14 +1,15 @@
 // src/app/health-check/page.tsx
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 async function checkDatabase() {
   try {
-    const { data, error } = await supabase
-      .from("users")
-      .select("count")
-      .limit(1);
+    if (!supabaseAdmin) {
+      return { status: false, error: "Supabase admin client not initialized" };
+    }
+
+    const { data, error } = await supabaseAdmin.from("users").select("id").limit(1);
 
     return { status: !error, error: error?.message };
   } catch (err) {
@@ -58,7 +59,7 @@ export default async function HealthCheckPage() {
           </div>
           <Badge
             variant={allHealthy ? "default" : "destructive"}
-            className="text-sm"
+            className="text-sm bg-green-400 text-black"
           >
             {allHealthy ? "✓ All Systems Operational" : "⚠ Issues Detected"}
           </Badge>
@@ -164,7 +165,10 @@ export default async function HealthCheckPage() {
 
 function StatusBadge({ status }: { status: boolean }) {
   return (
-    <Badge variant={status ? "default" : "destructive"} className="text-xs">
+    <Badge
+      variant={status ? "default" : "destructive"}
+      className="text-xs bg-green-400 text-black"
+    >
       {status ? "✓ OK" : "✗ Failed"}
     </Badge>
   );

@@ -40,7 +40,11 @@ export const supabaseAdmin = supabaseServiceKey
         persistSession: false,
       },
     })
-  : null;
+  : (() => {
+      throw new Error(
+        "SUPABASE_SERVICE_ROLE_KEY is required for server-side operations",
+      );
+    })();
 
 // =============================================
 // HELPER FUNCTIONS

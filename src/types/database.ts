@@ -1,5 +1,5 @@
 // =============================================
-// Profit is Profit (P is P) - Database Types
+// Profit is Profit (PisP) - Database Types
 // src/types/database.ts
 // Auto-generated types for Supabase
 // =============================================

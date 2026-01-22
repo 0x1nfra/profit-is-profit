@@ -1,5 +1,5 @@
 -- =============================================
--- Profit is Profit (P is P) - Database Schema
+-- Profit is Profit (PisP) - Database Schema
 -- Initial Migration
 -- =============================================
 
