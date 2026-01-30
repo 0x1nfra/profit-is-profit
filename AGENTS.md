@@ -26,8 +26,11 @@ pnpm start               # Start production server
 pnpm lint                # Run ESLint on all files
 pnpm lint --fix          # Run ESLint with auto-fix
 
-# Note: No test runner is currently configured.
-# When adding tests, use Vitest or Jest with React Testing Library.
+# Testing
+pnpm test                # Run all tests once
+pnpm test:watch          # Run tests in watch mode
+pnpm test:coverage       # Run tests with coverage report
+pnpm typecheck           # Run TypeScript type checking
 ```
 
 ---
@@ -129,6 +132,8 @@ Required variables (defined in `.env.local`):
 
 Before completing any task:
 - [ ] ESLint passes with `pnpm lint`
+- [ ] Tests pass with `pnpm test`
+- [ ] TypeScript type checking passes with `pnpm typecheck`
 - [ ] No TypeScript errors
 - [ ] Uses proper `@/` path aliases
 - [ ] Follows existing component patterns
