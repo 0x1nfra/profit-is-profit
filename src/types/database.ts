@@ -49,6 +49,7 @@ export interface Database {
           current_tier: number | null;
           last_synced_at: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
@@ -60,6 +61,7 @@ export interface Database {
           current_tier?: number | null;
           last_synced_at?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
@@ -71,6 +73,7 @@ export interface Database {
           current_tier?: number | null;
           last_synced_at?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
       };
       trades: {

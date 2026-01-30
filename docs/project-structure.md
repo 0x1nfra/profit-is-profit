@@ -100,23 +100,28 @@ profit-is-profit/
 │   │   ├── constants.ts            # ✅ DONE - Config & constants
 │   │   │
 │   │   ├── helpers/                # ✅ DONE - Helper functions
+│   │   │   ├── helius-helpers.ts   # ✅ DONE - Helius utilities (24 tests)
+│   │   │   ├── trade-helpers.ts    # ✅ DONE - Trade utilities (51 tests)
 │   │   │   ├── tier-helpers.ts     # ✅ DONE - Tier utilities (18 tests)
 │   │   │   └── cashout-helpers.ts  # ✅ DONE - Cashout utilities (31 tests)
 │   │   │
-│   │   ├── __tests__/              # ✅ DONE - Unit tests (136 total)
+│   │   ├── __tests__/              # ✅ DONE - Unit tests (229 total)
 │   │   │   ├── tier-calculator.test.ts
 │   │   │   ├── cashout-calculator.test.ts
 │   │   │   ├── tier-helpers.test.ts
 │   │   │   ├── cashout-helpers.test.ts
-│   │   │   ├── utils.test.ts
-│   │   │   └── error-classes.test.ts
+│   │   │   ├── helius-helpers.test.ts
+│   │   │   ├── trade-helpers.test.ts
+│   │   │   ├── trade-parser.test.ts
+│   │   │   ├── error-classes.test.ts
+│   │   │   └── utils.test.ts
 │   │   │
-│   │   ├── helius-client.ts        # 📅 Day 5-6 - Helius API wrapper
-│   │   ├── trade-parser.ts         # 📅 Day 5-6 - Parse transactions
+│   │   ├── helius-client.ts        # ✅ DONE - Helius API wrapper
+│   │   ├── trade-parser.ts         # ✅ DONE - Parse transactions (18 tests)
 │   │   │
 │   │   ├── services/               # Business logic services
-│   │   │   ├── wallet-service.ts   # 📅 Day 7 - Wallet operations
-│   │   │   ├── trade-service.ts    # 📅 Week 2 - Trade operations
+│   │   │   ├── trade-service.ts    # ✅ DONE - Trade sync operations
+│   │   │   ├── wallet-service.ts   # 📅 Week 2 - Wallet operations
 │   │   │   ├── cashout-service.ts  # 📅 Week 2 - Cashout operations
 │   │   │   └── goal-service.ts     # 📅 Week 3 - Goal operations
 │   │   │

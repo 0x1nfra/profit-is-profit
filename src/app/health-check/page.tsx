@@ -9,7 +9,7 @@ async function checkDatabase() {
       return { status: false, error: "Supabase admin client not initialized" };
     }
 
-    const { data, error } = await supabaseAdmin.from("users").select("id").limit(1);
+    const { error } = await supabaseAdmin.from("users").select("id").limit(1);
 
     return { status: !error, error: error?.message };
   } catch (err) {

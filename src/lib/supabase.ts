@@ -5,6 +5,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import type { Wallet, Trade } from "@/types";
 
 // Environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -172,7 +173,7 @@ export function handleSupabaseError(error: unknown): never {
  */
 export function subscribeToWalletChanges(
   userId: string,
-  callback: (wallet: any) => void,
+  callback: (wallet: Wallet) => void,
 ) {
   return supabase
     .channel(`wallets:${userId}`)
@@ -184,7 +185,7 @@ export function subscribeToWalletChanges(
         table: "wallets",
         filter: `user_id=eq.${userId}`,
       },
-      (payload) => callback(payload.new),
+      (payload) => callback(payload.new as Wallet),
     )
     .subscribe();
 }
@@ -194,7 +195,7 @@ export function subscribeToWalletChanges(
  */
 export function subscribeToNewTrades(
   userId: string,
-  callback: (trade: any) => void,
+  callback: (trade: Trade) => void,
 ) {
   return supabase
     .channel(`trades:${userId}`)
@@ -206,7 +207,7 @@ export function subscribeToNewTrades(
         table: "trades",
         filter: `user_id=eq.${userId}`,
       },
-      (payload) => callback(payload.new),
+      (payload) => callback(payload.new as Trade),
     )
     .subscribe();
 }

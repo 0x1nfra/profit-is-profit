@@ -75,62 +75,75 @@
 
 #### Tasks
 
-- [ ] **Helius Client** (`src/lib/helius-client.ts`)
-  - `getTransactionHistory(address: string): Promise<Transaction[]>`
-  - `getTokenBalances(address: string): Promise<Balance[]>`
-  - Rate limiting logic
-  - Error handling & retries
+- [x] **Helius Client** (`src/lib/helius-client.ts`)
+  - `getTransactionHistory(address: string): Promise<HeliusTransaction[]>`
+  - `getTokenBalances(address: string): Promise<TokenBalance[]>`
+  - `getSolBalance(address: string): Promise<number>`
+  - Rate limiting (10 req/sec) with Token Bucket algorithm
+  - Exponential backoff retry logic for 5xx errors
+  - Request/response logging
 
-- [ ] **Trade Parser** (`src/lib/trade-parser.ts`)
-  - `parseTrades(transactions: Transaction[]): Promise<ParsedTrade[]>`
+- [x] **Trade Parser** (`src/lib/trade-parser.ts`)
+  - `parseTrades(transactions, walletAddress): ParsedTrade[]`
+  - `aggregateTokenTransactions(transactions, tokenMint, walletAddress): AggregatedTrade`
+  - `detectPositionClosure(balances, tokenMint): boolean`
   - Group transactions by token mint
-  - Aggregate buys/sells
-  - Detect position closures (balance = 0)
-  - Handle edge cases (dust amounts, partial exits)
+  - Aggregate entry/exit SOL amounts
+  - Calculate ROI and net profit
+  - Handle dust amounts (< 0.000001 SOL)
+  - Section 4.1 example verified (Entry: 3.2, Exit: 7.3, Profit: 4.1, ROI: 128.125%)
 
-- [ ] **API Route: Trade Refresh** (`src/app/api/trades/refresh/route.ts`)
-  - POST endpoint to fetch new trades
-  - Call Helius API
-  - Parse trades
-  - Save to database
-  - Return new trades + updated balances
+- [x] **Trade Service** (`src/lib/services/trade-service.ts`)
+  - `syncTrades(walletAddress, userId): SyncResult` - Orchestrate full sync
+  - `saveTrade(parsedTrade, userId, walletId): Trade` - Idempotent save
+  - `updateWalletBalance(walletId, newBalance): Wallet`
+  - `getLastSyncTimestamp(walletAddress): string | null`
+  - Integrates with cashout calculator for recommendations
+
+- [x] **API Route: Trade Refresh** (`src/app/api/trades/refresh/route.ts`)
+  - POST `/api/trades/refresh` endpoint
+  - Request body: `{ walletAddress: string }`
+  - Response: `{ success, newTrades, updatedBalances }`
+  - Error handling: 400 (invalid address), 401 (unauthorized), 404 (wallet not found), 429 (rate limit), 500 (internal)
 
 **Deliverables:**
 
-- ✅ Working Helius integration
-- ✅ Trade detection logic functional
-- ✅ API endpoint returns parsed trades
+- ✅ Working Helius integration with rate limiting
+- ✅ Trade detection and parsing logic (93 tests)
+- ✅ API endpoint returns parsed trades with proper error handling
+- ✅ Idempotent trade saving prevents duplicates
+- ✅ Position closure detection when balance = 0
 
 **Dependencies:** Day 3-4 (business logic)
-**Blockers:** Need Helius API key
+**Blockers:** None - using environment variables for API key
 
 ---
 
-### Day 7: Wallet Management System
+### Day 7: Trade Service Layer
 
-**Goal:** CRUD operations for wallet setup
+**Goal:** Complete trade sync service and API endpoint
 
 #### Tasks
 
-- [ ] **Wallet Store** (`src/lib/stores/wallet-store.ts`)
-  - Zustand store for wallet state
-  - Actions: setTradingWallet, setVaultWallet, updateBalances
+- [x] **Trade Service** (`src/lib/services/trade-service.ts`)
+  - `syncTrades(walletAddress, userId)` - Orchestrate full sync from Helius
+  - `saveTrade(parsedTrade, userId, walletId)` - Idempotent save with duplicate detection
+  - `updateWalletBalance(walletId, newBalance)` - Update wallet after sync
+  - `calculateCashoutForTrade()` - Integrate cashout calculator for recommendations
+  - Helper functions for wallet lookup, existing trade checks, streak updates
 
-- [ ] **API Routes**
-  - `POST /api/wallets/setup` - Initial wallet setup
-  - `GET /api/wallets` - Get user's wallets
-  - `PUT /api/wallets/:id` - Update wallet address
-
-- [ ] **Wallet Service** (`src/lib/services/wallet-service.ts`)
-  - Database operations for wallets
-  - Balance fetching from Helius
-  - Tier calculation integration
+- [x] **API Route: Trade Refresh** (`src/app/api/trades/refresh/route.ts`)
+  - POST `/api/trades/refresh` endpoint
+  - Request body: `{ walletAddress: string }`
+  - Response: `{ success, newTrades, updatedBalances }`
+  - Error handling: 400 (invalid address), 401 (unauthorized), 404 (wallet not found), 429 (rate limit), 500 (internal)
 
 **Deliverables:**
 
-- ✅ Wallet CRUD operations working
-- ✅ State management in place
-- ✅ API endpoints functional
+- ✅ Trade sync service with idempotent operations
+- ✅ API endpoint for refreshing trades from Helius
+- ✅ Full error handling with proper HTTP status codes
+- ✅ Integration with cashout calculator for trade recommendations
 
 **Dependencies:** Day 1-6
 **Blockers:** None
@@ -586,6 +599,8 @@
 **Status:** In Progress 🟡
 
 ### Progress Update (Jan 30)
+
 - ✅ Day 1-2: Database & Type System (Complete)
 - ✅ Day 3-4: Core Business Logic (Complete - 136 unit tests passing)
-- ⏳ Day 5-6: Helius API Integration (Next)
+- ✅ Day 5-6: Helius API Integration (Next)
+- ✅ Day 7: Trade Service Layer

@@ -246,6 +246,28 @@ export interface ParsedTrade {
   positionClosedAt: Date;
 }
 
+export interface TokenBalance {
+  mint: string;
+  amount: number;
+  decimals: number;
+  tokenSymbol?: string;
+  name?: string;
+  usdValue?: number;
+}
+
+export interface AggregatedTrade {
+  tokenMint: string;
+  tokenSymbol?: string;
+  totalEntrySol: number;
+  totalExitSol: number;
+  netProfitSol: number;
+  roi: number;
+  transactions: HeliusTransaction[];
+  positionClosed: boolean;
+  firstTransactionAt: Date;
+  lastTransactionAt: Date;
+}
+
 // =============================================
 // API REQUEST/RESPONSE TYPES
 // =============================================
@@ -272,10 +294,20 @@ export interface TradeRefreshRequest {
 export interface TradeRefreshResponse {
   success: boolean;
   newTrades: Trade[];
-  updatedBalance: {
+  updatedBalances: {
     trading: number;
     vault: number;
   };
+}
+
+export interface SyncResult {
+  success: boolean;
+  newTrades: Trade[];
+  updatedBalances: {
+    trading: number;
+    vault: number;
+  };
+  lastSyncTimestamp: string;
 }
 
 // Cashout Confirmation
