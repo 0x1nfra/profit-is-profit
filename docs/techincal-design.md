@@ -108,11 +108,15 @@
 ```
 
 **Test Configuration:**
-- 136 unit tests covering core business logic
-- Tests for tier calculator, cashout calculator, and helpers
+
+- 229 unit tests covering core business logic, Helius integration, and trade parsing
+- Tests for tier calculator (27 tests), cashout calculator (24 tests), and helpers (124 tests)
+- Helius client tests with rate limiting and retry logic
+- Trade parser tests for transaction aggregation and profit calculation
 - React component tests with RTL (ready for future UI testing)
 - Coverage reporting with v8 provider
 - Next.js path aliases (`@/*`) configured
+- All tests passing with `pnpm test`
 
 ### 2.4 DevOps & Deployment
 
@@ -381,52 +385,76 @@ GET https://api.helius.xyz/v0/addresses/{address}/balances
 
 ### 5.2 Transaction Parsing Logic
 
+**Implementation Files:**
+
+- `src/lib/trade-parser.ts` - Main parsing logic with `parseTrades()` and `aggregateTokenTransactions()`
+- `src/lib/helpers/trade-helpers.ts` - Helper functions for swap detection, profit calculation, and data extraction
+
 **Filter Criteria:**
 
 ```javascript
-// Only parse swap transactions
-transaction.type === "SWAP" || transaction.type === "TOKEN_SWAP";
+// Detect swap transactions (DEX trades)
+isSwapTransaction(tx) checks for:
+- tx.type === "SWAP" || tx.type === "swap"
+- tx.swap.tokenInputs || tx.swap.tokenOutputs
+- Both token and native transfers present
+- DEX sources: JUPITER, RAYDIUM, ORCA, METEORA, PHOENIX, PUMP_FUN
 
 // Group by token mint
 groupBy(transactions, (tx) => tx.tokenMint);
 
-// Aggregate buys/sells per token
+// Aggregate entry/exit per token
 const trades = tokens
   .map((tokenMint) => {
     const txs = getTransactionsForToken(tokenMint);
-    const buys = txs.filter((tx) => tx.type === "BUY");
-    const sells = txs.filter((tx) => tx.type === "SELL");
+    const entryTransfers = extractNativeTransfers(txs, 'out'); // SOL spent
+    const exitTransfers = extractNativeTransfers(txs, 'in');   // SOL received
 
-    const totalEntry = sum(buys.map((b) => b.solAmount));
-    const totalExit = sum(sells.map((s) => s.solAmount));
+    const totalEntry = sum(entryTransfers.map((t) => t.amount));
+    const totalExit = sum(exitTransfers.map((t) => t.amount));
+    const netProfit = calculateNetProfit(totalEntry, totalExit);
+    const roi = calculateTradeROI(totalEntry, totalExit);
 
-    // Check if position closed
+    // Check if position closed (balance = 0)
     const currentBalance = getCurrentTokenBalance(tokenMint);
-    if (currentBalance > 0) return null; // Still open
+    const isClosed = detectPositionClosure(currentBalance);
+    if (!isClosed) return null; // Still open
 
     return {
       tokenMint,
-      totalEntry,
-      totalExit,
-      netProfit: totalExit - totalEntry,
-      roi: ((totalExit - totalEntry) / totalEntry) * 100,
+      tokenSymbol: extractTokenSymbol(txs),
+      totalEntrySOL: totalEntry,
+      totalExitSOL: totalExit,
+      netProfitSOL: netProfit,
+      roiPercent: roi,
+      positionOpenedAt: getFirstTransactionTime(txs),
+      positionClosedAt: getLastTransactionTime(txs),
     };
   })
   .filter(Boolean);
 ```
 
-### 5.3 Rate Limiting
+### 5.3 Rate Limiting & Error Handling
 
 **Helius Free Tier:**
 
 - 150 requests/minute
 - 10,000 requests/day
 
-**Mitigation:**
+**Implementation:**
 
-- Cache transaction data for 30 seconds
-- Implement request queuing
-- Upgrade to paid tier if needed ($50/mo for 500 req/min)
+- `RateLimiter` class in `src/lib/helius-client.ts` - Token bucket algorithm
+- Configurable rate limit: 10 requests/second (from `HELIUS_CONFIG.RATE_LIMIT`)
+- Exponential backoff retry logic for 5xx errors (max 3 retries)
+- Request/response logging for debugging
+
+**Error Handling:**
+
+- `HeliusError` class for API-specific errors
+- `ValidationError` for invalid addresses
+- `ApiError` for general API failures
+- Retry logic with jitter for transient failures
+- Proper error propagation to API routes with HTTP status codes
 
 ---
 
@@ -593,11 +621,13 @@ function getTierName(tier: Tier): string {
 
 **Must-Have (P0):**
 
+- [x] Database schema + Supabase setup (Day 1-2)
+- [x] Cashout calculation engine (Day 3-4)
+- [x] Helius API integration (Day 5-6)
+- [x] Trade detection and parsing logic (Day 5-6)
+- [x] Trade service layer with sync operations (Day 7)
+- [x] API endpoint for trade refresh (Day 7)
 - [ ] User wallet setup (trading + vault addresses)
-- [ ] Helius API integration (fetch transactions)
-- [ ] Trade detection and parsing logic
-- [ ] Cashout calculation engine
-- [ ] Database schema + Supabase setup
 - [ ] Basic dashboard UI (balances, tier, recent trades)
 
 **Should-Have (P1):**
@@ -606,6 +636,8 @@ function getTierName(tier: Tier): string {
 - [ ] Toast notifications for new trades
 - [ ] Trade history table
 - [ ] Cashout confirmation flow
+
+**Completed:** 229 unit tests covering all calculation logic, Helius integration, and trade parsing.
 
 ### 7.2 Phase 2: Goal System (Week 2-3)
 
