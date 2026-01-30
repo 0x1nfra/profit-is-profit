@@ -186,16 +186,16 @@ export async function getTransactionHistory(
   };
 
   try {
-    const signatures = await retryWithBackoff(
+    const response = await retryWithBackoff<{
+      result?: Array<{ signature: string; slot: number }>;
+    }>(
       () =>
-        makeHeliusRequest<Array<{ signature: string; slot: number }>>(
-          "getSignaturesForAddress",
-          "POST",
-          requestBody,
-        ),
+        makeHeliusRequest("getSignaturesForAddress", "POST", requestBody),
       HELIUS_CONFIG.MAX_RETRIES,
       isRetryableError,
     );
+
+    const signatures = response.result ?? [];
 
     // Now fetch transaction details for each signature
     const transactions: HeliusTransaction[] = [];

@@ -398,7 +398,7 @@ isSwapTransaction(tx) checks for:
 - tx.type === "SWAP" || tx.type === "swap"
 - tx.swap.tokenInputs || tx.swap.tokenOutputs
 - Both token and native transfers present
-- DEX sources: JUPITER, RAYDIUM, ORCA, METEORA, PHOENIX, PUMP_FUN
+- DEX sources: JUPITER, RAYDIUM, ORCA, METEORA, PHOENIX, LIFINITY, DRIFT, MANGO
 
 // Group by token mint
 groupBy(transactions, (tx) => tx.tokenMint);

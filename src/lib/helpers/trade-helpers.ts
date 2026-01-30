@@ -75,7 +75,7 @@ export function isSwapTransaction(tx: HeliusTransaction): boolean {
 export function extractTokenTransfers(
   tx: HeliusTransaction,
   walletAddress: string,
-): Array<TokenTransfer & { direction: "in" | "out"; netAmount: number }> {
+): Array<TokenTransfer & { direction: "in" | "out" | "self"; netAmount: number }> {
   if (!tx?.tokenTransfers || tx.tokenTransfers.length === 0) {
     return [];
   }
@@ -91,6 +91,18 @@ export function extractTokenTransfers(
     .map((transfer) => {
       const isOutgoing = transfer.fromUserAccount === walletAddress;
       const isIncoming = transfer.toUserAccount === walletAddress;
+
+      // Check for self-transfer first (same from and to address)
+      if (
+        transfer.fromUserAccount === walletAddress &&
+        transfer.toUserAccount === walletAddress
+      ) {
+        return {
+          ...transfer,
+          direction: "self",
+          netAmount: 0,
+        };
+      }
 
       return {
         ...transfer,

@@ -236,6 +236,10 @@ export async function saveTrade(
  * @param newBalance - The new SOL balance
  * @returns The updated Wallet record
  * @throws ApiError on update failures
+ *
+ * TODO: Implement SOL→USD conversion using a price service.
+ * Currently balance_usd is set to 0 to avoid misleading data.
+ * When price lookup is available, convert: balance_usd = newBalance * solPrice
  */
 export async function updateWalletBalance(
   walletId: string,
@@ -247,7 +251,7 @@ export async function updateWalletBalance(
       .from("wallets") as any)
       .update({
         balance_sol: newBalance,
-        balance_usd: newBalance, // Simplified - would need SOL price lookup
+        balance_usd: 0, // TODO: Convert SOL to USD using price service
         updated_at: new Date().toISOString(),
       })
       .eq("id", walletId)
@@ -314,16 +318,47 @@ export async function getLastSyncTimestamp(
  *
  * @param walletId - The wallet ID
  * @param timestamp - ISO timestamp string
+ * @throws ApiError on update failures
  */
 async function updateLastSyncTimestamp(
   walletId: string,
   timestamp: string,
 ): Promise<void> {
-  await (supabaseAdmin
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .from("wallets") as any)
-    .update({ last_synced_at: timestamp })
-    .eq("id", walletId);
+  try {
+    const { data, error } = await (supabaseAdmin
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from("wallets") as any)
+      .update({ last_synced_at: timestamp })
+      .eq("id", walletId)
+      .select();
+
+    if (error) {
+      throw new ApiError(
+        `Failed to update sync timestamp: ${error.message}`,
+        500,
+        "DB_ERROR",
+      );
+    }
+
+    // Verify that a row was actually updated
+    if (!data || data.length === 0) {
+      throw new ApiError(
+        `Wallet not found for sync timestamp update: ${walletId}`,
+        404,
+        "WALLET_NOT_FOUND",
+      );
+    }
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    throw new ApiError(
+      `Failed to update sync timestamp: ${error instanceof Error ? error.message : "Unknown error"}`,
+      500,
+      "UPDATE_FAILED",
+    );
+  }
 }
 
 // =============================================

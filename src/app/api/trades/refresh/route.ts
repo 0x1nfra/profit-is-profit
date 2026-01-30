@@ -4,10 +4,13 @@
 // =============================================
 
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 import type { TradeRefreshRequest, TradeRefreshResponse } from "@/types";
 import { ApiError, ValidationError } from "@/types";
 import { syncTrades } from "@/lib/services/trade-service";
 import { isValidSolanaAddress } from "@/lib/helpers/helius-helpers";
+import type { Database } from "@/types/database";
 
 // =============================================
 // POST /api/trades/refresh
@@ -65,15 +68,37 @@ export async function POST(
       );
     }
 
-    // Get authenticated user
-    const userId = request.headers.get("x-user-id");
+    // Authenticate user via Supabase session
+    const cookieStore = await cookies();
+    const supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+        global: {
+          headers: {
+            cookie: cookieStore.toString(),
+          },
+        },
+      },
+    );
 
-    if (!userId) {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
       return NextResponse.json(
         { error: "Authentication required", code: "UNAUTHORIZED" },
         { status: 401 },
       );
     }
+
+    const userId = user.id;
 
     // Sync trades
     const result = await syncTrades(walletAddress, userId);
