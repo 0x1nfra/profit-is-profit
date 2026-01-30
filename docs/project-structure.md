@@ -95,9 +95,21 @@ profit-is-profit/
 │   │   ├── supabase.ts             # ✅ DONE - Database client
 │   │   ├── utils.ts                # ✅ DONE - cn() helper
 │   │   │
-│   │   ├── tier-calculator.ts      # 📅 Day 3-4 - Tier calculation
-│   │   ├── cashout-calculator.ts   # 📅 Day 3-4 - Cashout logic
-│   │   ├── constants.ts            # 📅 Day 3-4 - Config & constants
+│   │   ├── tier-calculator.ts      # ✅ DONE - Tier calculation (27 tests)
+│   │   ├── cashout-calculator.ts   # ✅ DONE - Cashout logic (24 tests)
+│   │   ├── constants.ts            # ✅ DONE - Config & constants
+│   │   │
+│   │   ├── helpers/                # ✅ DONE - Helper functions
+│   │   │   ├── tier-helpers.ts     # ✅ DONE - Tier utilities (18 tests)
+│   │   │   └── cashout-helpers.ts  # ✅ DONE - Cashout utilities (31 tests)
+│   │   │
+│   │   ├── __tests__/              # ✅ DONE - Unit tests (136 total)
+│   │   │   ├── tier-calculator.test.ts
+│   │   │   ├── cashout-calculator.test.ts
+│   │   │   ├── tier-helpers.test.ts
+│   │   │   ├── cashout-helpers.test.ts
+│   │   │   ├── utils.test.ts
+│   │   │   └── error-classes.test.ts
 │   │   │
 │   │   ├── helius-client.ts        # 📅 Day 5-6 - Helius API wrapper
 │   │   ├── trade-parser.ts         # 📅 Day 5-6 - Parse transactions
@@ -131,6 +143,8 @@ profit-is-profit/
 ├── eslint.config.mjs               # ✅ DONE
 ├── components.json                 # ✅ DONE - shadcn config
 ├── pnpm-workspace.yaml             # ✅ DONE
+├── vitest.config.ts                # ✅ DONE - Vitest configuration
+├── vitest.setup.ts                 # ✅ DONE - Test setup file
 └── README.md                       # ✅ DONE
 ```
 
