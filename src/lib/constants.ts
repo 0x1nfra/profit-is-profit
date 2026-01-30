@@ -114,3 +114,26 @@ export const DEFAULTS = {
   BOOST_DURATION_DAYS: 7,
   WEEKS_IN_MONTH: 4,
 } as const;
+
+// =============================================
+// HELIUS API CONFIGURATION
+// =============================================
+
+export const HELIUS_CONFIG = {
+  // Base URL for Helius API
+  API_BASE_URL: "https://mainnet.helius-rpc.com",
+  // Rate limit: max requests per second
+  RATE_LIMIT: 10,
+  // Max retries for failed requests
+  MAX_RETRIES: 3,
+  // Initial retry delay in milliseconds (exponential backoff)
+  RETRY_DELAY_MS: 1000,
+  // Maximum delay between retries
+  MAX_RETRY_DELAY_MS: 10000,
+  // Request timeout in milliseconds
+  REQUEST_TIMEOUT_MS: 30000,
+  // Default limit for transaction history
+  DEFAULT_TX_LIMIT: 100,
+  // Maximum limit for transaction history
+  MAX_TX_LIMIT: 1000,
+} as const;
