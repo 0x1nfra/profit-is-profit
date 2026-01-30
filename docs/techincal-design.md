@@ -93,7 +93,28 @@
 }
 ```
 
-### 2.3 DevOps & Deployment
+### 2.3 Testing Stack
+
+```json
+{
+  "test-runner": "Vitest",
+  "test-environment": "jsdom",
+  "react-testing": "@testing-library/react",
+  "user-events": "@testing-library/user-event",
+  "matchers": "@testing-library/jest-dom",
+  "coverage": "@vitest/coverage-v8",
+  "mocks": "vitest-mock-extended"
+}
+```
+
+**Test Configuration:**
+- 136 unit tests covering core business logic
+- Tests for tier calculator, cashout calculator, and helpers
+- React component tests with RTL (ready for future UI testing)
+- Coverage reporting with v8 provider
+- Next.js path aliases (`@/*`) configured
+
+### 2.4 DevOps & Deployment
 
 ```json
 {

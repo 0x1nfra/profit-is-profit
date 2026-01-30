@@ -42,26 +42,27 @@
 
 #### Tasks
 
-- [ ] **Tier Calculator** (`src/lib/tier-calculator.ts`)
+- [x] **Tier Calculator** (`src/lib/tier-calculator.ts`)
   - `calculateTier(balanceSOL: number): Tier`
   - `getTierName(tier: Tier): string`
   - `getTierConfig(tier: Tier): TierConfig`
   - Unit tests for all tier boundaries
 
-- [ ] **Cashout Calculator** (`src/lib/cashout-calculator.ts`)
+- [x] **Cashout Calculator** (`src/lib/cashout-calculator.ts`)
   - `calculateCashout(input: CashoutInput): CashoutResult`
   - Handle all multipliers (tier, ROI, streak, goal boost)
   - Unit tests for all examples from functional-logic.md
 
-- [ ] **Constants & Config** (`src/lib/constants.ts`)
+- [x] **Constants & Config** (`src/lib/constants.ts`)
   - Tier boundaries, base rates, multipliers
   - ROI thresholds, streak rules
 
 **Deliverables:**
 
 - ✅ All calculation functions working
-- ✅ Unit tests passing (Jest)
-- ✅ Example calculations verified against spec
+- ✅ 136 unit tests passing (Vitest + React Testing Library)
+- ✅ Example calculations verified against spec (Section 3.5)
+- ✅ Tier boundary tests complete (0.99, 1.0, 3.0, 7.0, 10.0, 10.01)
 
 **Dependencies:** Day 1-2 (types)
 **Blockers:** None
@@ -388,11 +389,14 @@
 
 #### Tasks
 
-- [ ] **Unit Tests**
-  - Tier calculator tests
-  - Cashout calculator tests (all examples from spec)
-  - Trade parser tests
-  - Goal service tests
+- [x] **Unit Tests (Vitest Setup Complete Day 3-4)**
+  - Tier calculator tests (27 tests)
+  - Cashout calculator tests (24 tests - all examples from spec)
+  - Cashout helper tests (31 tests)
+  - Tier helper tests (18 tests)
+  - Utility tests (13 tests)
+  - Error class tests (23 tests)
+  - **Total: 136 unit tests passing**
 
 - [ ] **Integration Tests**
   - API route tests (Supertest)
@@ -578,5 +582,10 @@
 - Can parallelize some tasks in Week 2 if needed
 - Features can be swapped if priorities change
 
-**Last Updated:** January 22, 2026
-**Status:** Ready to Start ✅
+**Last Updated:** January 30, 2026
+**Status:** In Progress 🟡
+
+### Progress Update (Jan 30)
+- ✅ Day 1-2: Database & Type System (Complete)
+- ✅ Day 3-4: Core Business Logic (Complete - 136 unit tests passing)
+- ⏳ Day 5-6: Helius API Integration (Next)
