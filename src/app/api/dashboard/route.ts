@@ -4,7 +4,7 @@
 // =============================================
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { createAdminClient } from "@/lib/supabase-server";
 import { DashboardData, WalletType, Wallet } from "@/types";
 import { calculateTier, getTierConfig } from "@/lib/tier-calculator";
 import { DEFAULTS } from "@/lib/constants";
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check for wallet auth cookie
     const authCookie = request.cookies.get(WALLET_AUTH_COOKIE);
-    if (!authCookie || authCookie.value !== "authenticated") {
+    if (!authCookie || authCookie.value !== "true") {
       return NextResponse.json(
         {
           success: false,
@@ -42,11 +42,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use wallet address as user_id
-    const userId = walletAddress;
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createClient() as any;
+    const supabase = createAdminClient() as any;
+
+    // Look up user by wallet address to get UUID
+    const { data: user } = await supabase
+      .from("users")
+      .select("id")
+      .eq("wallet_address", walletAddress)
+      .maybeSingle();
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { message: "User not found", code: "USER_NOT_FOUND" },
+        },
+        { status: 404 }
+      );
+    }
+
+    const userId = user.id; // This is the UUID
 
     // Fetch user wallets
      
@@ -184,10 +200,13 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Dashboard API error:", error);
 
+    // DEBUG: Show actual error
+    const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+    
     return NextResponse.json(
       {
         success: false,
-        error: { message: "Internal server error", code: "INTERNAL_ERROR" },
+        error: { message: errorMessage, code: "INTERNAL_ERROR" },
       },
       { status: 500 }
     );

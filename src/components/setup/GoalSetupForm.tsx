@@ -63,7 +63,9 @@ export function GoalSetupForm({
   });
 
   const handleSubmit = async (data: GoalSetupFormData) => {
+    console.log("[GoalSetupForm] handleSubmit called with data:", data);
     await onSubmit(data);
+    console.log("[GoalSetupForm] onSubmit completed");
   };
 
   return (
@@ -112,6 +114,7 @@ export function GoalSetupForm({
             type="submit"
             disabled={!form.formState.isValid || isSubmitting}
             className="w-full"
+            onClick={() => console.log("[GoalSetupForm] Button clicked! Valid:", form.formState.isValid)}
           >
             {isSubmitting ? "Saving..." : "Complete Setup"}
           </Button>

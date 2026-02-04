@@ -13,6 +13,7 @@ import { WalletCard } from "@/components/wallet/WalletCard";
 import { GoalProgress } from "@/components/goal/GoalProgress";
 import { TradeList } from "@/components/trade/TradeList";
 import { DashboardData } from "@/types";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,15 +23,18 @@ export default function DashboardPage() {
   useRequireAuth();
   useRequireSetup();
 
+  const { walletAddress } = useAuthStore();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchDashboardData = async () => {
+    if (!walletAddress) return;
+
     try {
       setError(null);
-      const response = await fetch("/api/dashboard");
+      const response = await fetch(`/api/dashboard?walletAddress=${walletAddress}`);
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -57,14 +61,18 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [walletAddress]);
 
   const handleRefreshWallet = async () => {
+    if (!walletAddress) return;
+    
     setIsRefreshing(true);
     // Refresh trades and balances
     try {
       const response = await fetch("/api/trades/refresh", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress }),
       });
 
       if (response.ok) {

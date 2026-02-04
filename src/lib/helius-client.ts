@@ -152,7 +152,7 @@ async function makeHeliusRequest<T>(
 // =============================================
 
 /**
- * Fetches transaction history for a Solana address
+ * Fetches transaction history for a Solana address using Helius Enhanced API
  *
  * @param address - The wallet address to fetch transactions for
  * @param options - Optional parameters (limit, before)
@@ -172,64 +172,32 @@ export async function getTransactionHistory(
     HELIUS_CONFIG.MAX_TX_LIMIT,
   );
 
-  const requestBody: Record<string, unknown> = {
-    id: "pisp-history",
-    jsonrpc: "2.0",
-    method: "getSignaturesForAddress",
-    params: [
-      address,
-      {
-        limit,
-        before: options?.before,
-      },
-    ],
-  };
-
   try {
-    const response = await retryWithBackoff<{
-      result?: Array<{ signature: string; slot: number }>;
-    }>(
-      () =>
-        makeHeliusRequest("getSignaturesForAddress", "POST", requestBody),
-      HELIUS_CONFIG.MAX_RETRIES,
-      isRetryableError,
-    );
+    // Use Helius Enhanced API for enriched transaction data
+    const apiKey = getHeliusApiKey();
+    const url = `https://api.helius.xyz/v0/addresses/${address}/transactions?api-key=${apiKey}&limit=${limit}${options?.before ? `&before=${options.before}` : ''}`;
 
-    const signatures = response.result ?? [];
+    await rateLimiter.waitForRateLimit();
 
-    // Now fetch transaction details for each signature
-    const transactions: HeliusTransaction[] = [];
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    for (const sigInfo of signatures) {
-      const txBody: Record<string, unknown> = {
-        id: "pisp-tx",
-        jsonrpc: "2.0",
-        method: "getTransaction",
-        params: [
-          sigInfo.signature,
-          {
-            encoding: "jsonParsed",
-            maxSupportedTransactionVersion: 0,
-          },
-        ],
-      };
-
-      const tx = await retryWithBackoff(
-        () =>
-          makeHeliusRequest<HeliusTransaction>(
-            "getTransaction",
-            "POST",
-            txBody,
-          ),
-        HELIUS_CONFIG.MAX_RETRIES,
-        isRetryableError,
-      );
-
-      if (tx) {
-        transactions.push(tx);
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new HeliusError("Rate limit exceeded. Please try again later.", 429);
       }
+      const errorText = await response.text();
+      throw new HeliusError(
+        `Helius API error: ${response.status} - ${errorText}`,
+        response.status,
+      );
     }
 
+    const transactions = (await response.json()) as HeliusTransaction[];
     return transactions;
   } catch (error) {
     if (error instanceof HeliusError || error instanceof ValidationError) {

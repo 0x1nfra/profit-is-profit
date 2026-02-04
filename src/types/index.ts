@@ -234,6 +234,18 @@ export interface SwapInfo {
   }>;
 }
 
+export interface TokenInfo {
+  symbol: string;
+  name: string;
+  mint: string;
+}
+
+export interface TokenMetadata {
+  address: string;
+  name: string;
+  symbol: string;
+}
+
 export interface ParsedTrade {
   tokenMint: string;
   tokenSymbol?: string;

@@ -58,10 +58,12 @@ export default function SetupPage() {
   };
 
   const handleGoalSubmit = async (data: GoalSetupFormData) => {
+    console.log("[handleGoalSubmit] STARTED");
     setIsSubmitting(true);
     setServerError(null);
 
     try {
+      console.log("[handleGoalSubmit] About to fetch API");
       const response = await fetch("/api/goals", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -70,18 +72,26 @@ export default function SetupPage() {
         }),
       });
 
+      console.log("[handleGoalSubmit] API response status:", response.status);
       const result = await response.json();
+      console.log("[handleGoalSubmit] API result:", result);
 
       if (!response.ok) {
         throw new Error(result.error?.message || "Failed to save goal");
       }
 
-      // Redirect to dashboard
-      router.push("/dashboard");
+      console.log("[handleGoalSubmit] API success, about to redirect...");
+      alert("API success! Redirecting...");
+      // Use window.location for hard navigation instead of router.push
+      window.location.href = "/dashboard";
     } catch (err) {
+      console.error("[handleGoalSubmit] ERROR:", err);
+      alert("Error: " + (err instanceof Error ? err.message : "Unknown error"));
       setServerError(
         err instanceof Error ? err.message : "An unexpected error occurred"
       );
+    } finally {
+      console.log("[handleGoalSubmit] FINALLY block");
       setIsSubmitting(false);
     }
   };

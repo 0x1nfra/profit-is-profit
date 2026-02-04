@@ -52,13 +52,28 @@ export function parseTrades(
     return [];
   }
 
+  // Debug: Log first transaction to understand structure
+  if (transactions.length > 0) {
+    const firstTx = transactions[0];
+    console.log('[Parser] First transaction:', {
+      signature: firstTx.signature?.substring(0, 20) + '...',
+      type: firstTx.type,
+      source: firstTx.source,
+      hasTokenTransfers: !!firstTx.tokenTransfers?.length,
+      hasNativeTransfers: !!firstTx.nativeTransfers?.length,
+      hasSwap: !!firstTx.swap,
+    });
+  }
+
   // Get all unique token mints from transactions
   const tokenMints = extractUniqueTokenMints(transactions);
+  console.log(`[Parser] Found ${tokenMints.length} unique token mints`);
 
   // Aggregate trades for each token mint
   const parsedTrades: ParsedTrade[] = [];
 
   for (const mint of tokenMints) {
+    console.log(`[Parser] Processing mint: ${mint.substring(0, 15)}...`);
     const aggregated = aggregateTokenTransactions(
       transactions,
       mint,
@@ -66,6 +81,7 @@ export function parseTrades(
     );
 
     if (aggregated) {
+      console.log(`[Parser] Aggregated trade: entry=${aggregated.totalEntrySol}, exit=${aggregated.totalExitSol}, closed=${aggregated.positionClosed}`);
       parsedTrades.push({
         tokenMint: aggregated.tokenMint,
         tokenSymbol: aggregated.tokenSymbol,
@@ -77,6 +93,8 @@ export function parseTrades(
         positionOpenedAt: aggregated.firstTransactionAt,
         positionClosedAt: aggregated.lastTransactionAt,
       });
+    } else {
+      console.log(`[Parser] No aggregated trade for mint`);
     }
   }
 
@@ -122,15 +140,21 @@ export function aggregateTokenTransactions(
   for (const tx of sortedTxs) {
     // Get token transfers for this wallet
     const tokenTransfers = extractTokenTransfers(tx, walletAddress);
+    
+    // Debug: Log transaction details
+    const isSwap = isSwapTransaction(tx);
+    const nativeTransfer = extractNativeTransfers(tx, walletAddress);
+    console.log(`[Parser] TX ${tx.signature?.substring(0, 10)}... swaps=${isSwap}, tokenTransfers=${tokenTransfers.length}, nativeTransfer=${nativeTransfer.toFixed(4)} SOL`);
 
     for (const transfer of tokenTransfers) {
       // If we're receiving tokens (incoming), we spent SOL to get them
       if (transfer.direction === "in") {
         // For swaps, we need to calculate how much SOL was spent
-        if (isSwapTransaction(tx)) {
-          const solSpent = Math.abs(extractNativeTransfers(tx, walletAddress));
+        if (isSwap) {
+          const solSpent = Math.abs(nativeTransfer);
           if (!handleDustAmounts(solSpent)) {
             totalEntrySol += normalizeAmount(solSpent);
+            console.log(`[Parser]   Entry: +${solSpent.toFixed(4)} SOL`);
           }
         }
       }
@@ -138,10 +162,11 @@ export function aggregateTokenTransactions(
       // If we're sending tokens (outgoing), we received SOL for them
       if (transfer.direction === "out") {
         // For swaps, we need to calculate how much SOL was received
-        if (isSwapTransaction(tx)) {
-          const solReceived = extractNativeTransfers(tx, walletAddress);
+        if (isSwap) {
+          const solReceived = nativeTransfer;
           if (solReceived > 0 && !handleDustAmounts(solReceived)) {
             totalExitSol += normalizeAmount(solReceived);
+            console.log(`[Parser]   Exit: +${solReceived.toFixed(4)} SOL`);
           }
         }
       }
@@ -156,6 +181,22 @@ export function aggregateTokenTransactions(
   const firstTransactionAt = getFirstTransactionTime(sortedTxs)!;
   const lastTransactionAt = getLastTransactionTime(sortedTxs)!;
 
+  // Determine if position is likely closed based on transaction pattern
+  // A position is considered closed if:
+  // 1. There were outgoing transfers (sells), AND
+  // 2. The last transaction was an outgoing transfer (suggesting complete exit)
+  let positionClosed = false;
+  if (sortedTxs.length > 0) {
+    const lastTx = sortedTxs[sortedTxs.length - 1];
+    const lastTxTransfers = extractTokenTransfers(lastTx, walletAddress);
+    const hasOutgoingTransfers = lastTxTransfers.some(
+      (t) => t.direction === "out"
+    );
+    // Position is closed if the last transaction had outgoing transfers (sell)
+    // and we have some exit value recorded
+    positionClosed = hasOutgoingTransfers && totalExitSol > 0;
+  }
+
   return {
     tokenMint,
     tokenSymbol: undefined, // Would need token metadata lookup
@@ -164,7 +205,7 @@ export function aggregateTokenTransactions(
     netProfitSol: normalizeAmount(netProfitSol),
     roi,
     transactions: sortedTxs,
-    positionClosed: false, // Will be determined separately
+    positionClosed,
     firstTransactionAt,
     lastTransactionAt,
   };

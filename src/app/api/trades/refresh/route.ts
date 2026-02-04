@@ -68,33 +68,39 @@ export async function POST(
       );
     }
 
-    // Authenticate user via Supabase session
+    // Check for wallet auth cookie
     const cookieStore = await cookies();
+    const authCookie = cookieStore.get("pisp-wallet-auth");
+    
+    if (!authCookie || authCookie.value !== "true") {
+      return NextResponse.json(
+        { error: "Authentication required", code: "UNAUTHORIZED" },
+        { status: 401 },
+      );
+    }
+
+    // Look up user by wallet address to get UUID
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         auth: {
           persistSession: false,
           autoRefreshToken: false,
         },
-        global: {
-          headers: {
-            cookie: cookieStore.toString(),
-          },
-        },
       },
     );
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: user } = await supabase
+      .from("users")
+      .select("id")
+      .eq("wallet_address", walletAddress)
+      .maybeSingle() as { data: { id: string } | null };
 
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json(
-        { error: "Authentication required", code: "UNAUTHORIZED" },
-        { status: 401 },
+        { error: "User not found", code: "USER_NOT_FOUND" },
+        { status: 404 },
       );
     }
 

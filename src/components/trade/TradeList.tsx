@@ -60,6 +60,15 @@ export function TradeList({
     return `${sign}${roi.toFixed(1)}%`;
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   // Empty state
   if (trades.length === 0) {
     return (
@@ -126,6 +135,11 @@ export function TradeList({
                     {formatRoi(trade.roi_percent)} ROI
                   </Badge>
                 </div>
+              </div>
+
+              {/* Date */}
+              <div className="text-xs text-muted-foreground">
+                {formatDate(trade.position_closed_at)}
               </div>
 
               {/* Profit/Loss Info */}

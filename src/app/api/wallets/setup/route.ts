@@ -4,14 +4,16 @@
 // =============================================
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { createAdminClient } from "@/lib/supabase-server";
 import { WalletSetupRequest, WalletSetupResponse, WalletType, Wallet } from "@/types";
 import { ApiError } from "@/types";
+import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
+    // Use admin client to bypass RLS for server-side user/wallet creation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createClient() as any;
+    const supabase = createAdminClient() as any;
 
     // Check for wallet auth cookie (set by client when wallet connects)
     const walletAuthCookie = request.cookies.get("pisp-wallet-auth");
@@ -26,12 +28,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse request body to get wallet address (used as user ID for wallet-based auth)
+    // Parse request body to get wallet address
     const body: WalletSetupRequest = await request.json();
     const { tradingWalletAddress, vaultWalletAddress } = body;
-    
-    // Use the trading wallet address as the user ID
-    const userId = tradingWalletAddress;
 
     // Validate wallet addresses
     if (!tradingWalletAddress || !vaultWalletAddress) {
@@ -77,23 +76,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists, create if not (wallet-based auth)
+    // Check if user exists by wallet address, create if not
      
     const { data: existingUser, error: userError } = await supabase
       .from("users")
       .select("*")
-      .eq("id", userId)
+      .eq("wallet_address", tradingWalletAddress)
       .maybeSingle();
 
     if (userError) {
       throw new Error(`Failed to check existing user: ${userError.message}`);
     }
 
+    let userId: string;
+
     if (!existingUser) {
-      // Create new user with wallet address as ID
-       
+      // Generate UUID for new user
+      userId = randomUUID();
+      
+      // Create new user with UUID and wallet address
       const { error: insertError } = await supabase.from("users").insert({
         id: userId,
+        wallet_address: tradingWalletAddress,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         email: null,
@@ -103,6 +107,8 @@ export async function POST(request: NextRequest) {
       if (insertError) {
         throw new Error(`Failed to create user: ${insertError.message}`);
       }
+    } else {
+      userId = existingUser.id;
     }
 
     // Check if wallets already exist for this user
@@ -115,24 +121,24 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
 
     // Prepare wallet records
-    const tradingWallet = {
+    const tradingWallet: Wallet = {
+      id: randomUUID(),
       user_id: userId,
-      wallet_type: "trading" as const,
+      wallet_type: WalletType.TRADING,
       address: tradingWalletAddress,
       balance_sol: 0,
       balance_usd: 0,
       created_at: now,
-      updated_at: now,
     };
 
-    const vaultWallet = {
+    const vaultWallet: Wallet = {
+      id: randomUUID(),
       user_id: userId,
-      wallet_type: "vault" as const,
+      wallet_type: WalletType.VAULT,
       address: vaultWalletAddress,
       balance_sol: 0,
       balance_usd: 0,
       created_at: now,
-      updated_at: now,
     };
 
     let tradingResult: Wallet;
@@ -148,69 +154,49 @@ export async function POST(request: NextRequest) {
       );
 
       if (existingTrading) {
-         
-        const { data } = await supabase
+        // Just update the address - skip updated_at to avoid schema cache issues
+        const { error: updateError } = await supabase
           .from("wallets")
-           
-          .update({ address: tradingWalletAddress, updated_at: now })
-          .eq("id", existingTrading.id)
-          .select()
-          .single() as { data: Wallet };
-        tradingResult = data;
+          .update({ address: tradingWalletAddress })
+          .eq("id", existingTrading.id);
+        if (updateError) throw new Error(`Failed to update trading wallet: ${updateError.message}`);
+        tradingResult = { ...existingTrading, address: tradingWalletAddress };
       } else {
-         
-        const { data } = await supabase
+        const { error: insertError } = await supabase
           .from("wallets")
-           
-          .insert(tradingWallet)
-          .select()
-          .single() as { data: Wallet };
-        tradingResult = data;
+          .insert(tradingWallet);
+        if (insertError) throw new Error(`Failed to insert trading wallet: ${insertError.message}`);
+        tradingResult = tradingWallet;
       }
 
       if (existingVault) {
-         
-        const { data } = await supabase
+        // Just update the address - skip updated_at to avoid schema cache issues
+        const { error: updateError } = await supabase
           .from("wallets")
-           
-          .update({ address: vaultWalletAddress, updated_at: now })
-          .eq("id", existingVault.id)
-          .select()
-          .single() as { data: Wallet };
-        vaultResult = data;
+          .update({ address: vaultWalletAddress })
+          .eq("id", existingVault.id);
+        if (updateError) throw new Error(`Failed to update vault wallet: ${updateError.message}`);
+        vaultResult = { ...existingVault, address: vaultWalletAddress };
       } else {
-         
-        const { data } = await supabase
+        const { error: insertError } = await supabase
           .from("wallets")
-           
-          .insert(vaultWallet)
-          .select()
-          .single() as { data: Wallet };
-        vaultResult = data;
+          .insert(vaultWallet);
+        if (insertError) throw new Error(`Failed to insert vault wallet: ${insertError.message}`);
+        vaultResult = vaultWallet;
       }
     } else {
       // Insert new wallets
-       
-      const { data: tradingData } = await supabase
+      const { error: tradingError } = await supabase
         .from("wallets")
-         
-        .insert(tradingWallet)
-        .select()
-        .single() as { data: Wallet };
-      tradingResult = tradingData;
+        .insert(tradingWallet);
+      if (tradingError) throw new Error(`Failed to insert trading wallet: ${tradingError.message}`);
+      tradingResult = tradingWallet;
 
-       
-      const { data: vaultData } = await supabase
+      const { error: vaultError } = await supabase
         .from("wallets")
-         
-        .insert(vaultWallet)
-        .select()
-        .single() as { data: Wallet };
-      vaultResult = vaultData;
-    }
-
-    if (!tradingResult || !vaultResult) {
-      throw new Error("Failed to save wallets");
+        .insert(vaultWallet);
+      if (vaultError) throw new Error(`Failed to insert vault wallet: ${vaultError.message}`);
+      vaultResult = vaultWallet;
     }
 
     // Initialize user state if it doesn't exist
@@ -275,13 +261,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TEMPORARY: Include error details for debugging
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    
     return NextResponse.json(
       {
         success: false,
-        error: { message: errorMessage, code: "INTERNAL_ERROR" },
+        error: { message: "Internal server error", code: "INTERNAL_ERROR" },
       },
       { status: 500 }
     );

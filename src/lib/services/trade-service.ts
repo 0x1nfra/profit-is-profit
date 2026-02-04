@@ -11,6 +11,7 @@ import { parseTrades } from "../trade-parser";
 import { isValidSolanaAddress } from "../helpers/helius-helpers";
 import { calculateTier } from "../tier-calculator";
 import { calculateCashout } from "../cashout-calculator";
+import { getTokenSymbol } from "./token-registry-service";
 
 // =============================================
 // SYNC TRADES
@@ -74,11 +75,20 @@ export async function syncTrades(
 
     // Parse transactions into trades
     const parsedTrades = parseTrades(transactions, walletAddress);
+    console.log(`[Sync] Parsed ${parsedTrades.length} trades from ${transactions.length} transactions`);
 
-    // Filter out trades that already exist in the database
+    // Filter out trades that already exist in the database and only save closed positions
     const newTrades: Trade[] = [];
 
     for (const parsed of parsedTrades) {
+      console.log(`[Sync] Processing trade: ${parsed.tokenMint.substring(0, 8)}... closed=${parsed.positionClosed}, entry=${parsed.totalEntry}, exit=${parsed.totalExit}`);
+      
+      // Only save trades where the position is actually closed
+      if (!parsed.positionClosed) {
+        console.log(`[Sync] Skipping trade - position not closed`);
+        continue;
+      }
+
       // Check if trade already exists (by token mint and close date)
       const existing = await findExistingTrade(
         userId,
@@ -87,11 +97,16 @@ export async function syncTrades(
       );
 
       if (!existing) {
+        console.log(`[Sync] Saving new trade`);
         // Save new trade
         const saved = await saveTrade(parsed, userId, wallet.id);
         newTrades.push(saved);
+      } else {
+        console.log(`[Sync] Trade already exists, skipping`);
       }
     }
+    
+    console.log(`[Sync] Saved ${newTrades.length} new trades`);
 
     // TODO: Use currentBalances to detect position closures
     // const currentBalances = await getTokenBalances(walletAddress);
@@ -162,35 +177,40 @@ export async function saveTrade(
     // Get goal boost (if any)
     const goalBoost = await getGoalBoost(userId);
 
-    // Calculate cashout recommendation
-    const cashoutInput = {
-      tier: currentTier,
-      netProfitSOL: trade.netProfit,
-      roiPercent: trade.roi,
-      losingStreak,
-      goalBoostPercent: goalBoost,
-    };
+    // Calculate cashout recommendation (only for profitable trades)
+    let cashoutResult;
+    if (trade.netProfit > 0) {
+      const cashoutInput = {
+        tier: currentTier,
+        netProfitSOL: trade.netProfit,
+        roiPercent: trade.roi,
+        losingStreak,
+        goalBoostPercent: goalBoost || undefined,
+      };
+      cashoutResult = calculateCashout(cashoutInput);
+    }
 
-    const cashoutResult = calculateCashout(cashoutInput);
+    // Get token symbol
+    const tokenSymbol = await getTokenSymbol(trade.tokenMint);
 
     // Create trade record
     const tradeData = {
       user_id: userId,
       trading_wallet_id: walletId,
       token_mint: trade.tokenMint,
-      token_symbol: trade.tokenSymbol || null,
+      token_symbol: tokenSymbol,
       total_entry_sol: trade.totalEntry,
       total_exit_sol: trade.totalExit,
       net_profit_sol: trade.netProfit,
       roi_percent: trade.roi,
       tier_at_trade: currentTier,
       losing_streak_at_trade: losingStreak,
-      base_cashout_percent: cashoutResult.breakdown.baseRate,
-      roi_bonus_percent: cashoutResult.breakdown.roiBonus,
-      streak_multiplier: cashoutResult.breakdown.streakMultiplier,
-      goal_boost_multiplier: cashoutResult.breakdown.goalBoostMultiplier,
-      final_cashout_percent: cashoutResult.finalCashoutPercent,
-      recommended_cashout_sol: cashoutResult.cashoutAmountSOL,
+      base_cashout_percent: cashoutResult?.breakdown.baseRate ?? 0,
+      roi_bonus_percent: cashoutResult?.breakdown.roiBonus ?? 0,
+      streak_multiplier: cashoutResult?.breakdown.streakMultiplier ?? 1,
+      goal_boost_multiplier: cashoutResult?.breakdown.goalBoostMultiplier ?? 1,
+      final_cashout_percent: cashoutResult?.finalCashoutPercent ?? 0,
+      recommended_cashout_sol: cashoutResult?.cashoutAmountSOL ?? 0,
       status: TradeStatus.CONFIRMED, // Auto-confirmed for now
       position_opened_at: trade.positionOpenedAt?.toISOString() || null,
       position_closed_at: trade.positionClosedAt.toISOString(),
@@ -252,7 +272,7 @@ export async function updateWalletBalance(
       .update({
         balance_sol: newBalance,
         balance_usd: 0, // TODO: Convert SOL to USD using price service
-        updated_at: new Date().toISOString(),
+        // Skip updated_at to avoid schema cache issues
       })
       .eq("id", walletId)
       .select()

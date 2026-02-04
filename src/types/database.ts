@@ -18,6 +18,7 @@ export interface Database {
       users: {
         Row: {
           id: string;
+          wallet_address: string | null;
           created_at: string;
           updated_at: string;
           email: string | null;
@@ -25,6 +26,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          wallet_address?: string | null;
           created_at?: string;
           updated_at?: string;
           email?: string | null;
@@ -32,6 +34,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          wallet_address?: string | null;
           created_at?: string;
           updated_at?: string;
           email?: string | null;

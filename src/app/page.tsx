@@ -44,12 +44,7 @@ export default function LandingPage() {
     const checkAndRedirect = () => {
       const state = useAuthStore.getState();
       if (state.isHydrated && state.isAuthenticated) {
-        const hasCompletedSetup = localStorage.getItem("pisp-setup-complete");
-        if (hasCompletedSetup === "true") {
-          router.replace("/dashboard");
-        } else {
-          router.replace("/setup");
-        }
+        router.replace("/dashboard");
       }
     };
 
@@ -59,12 +54,7 @@ export default function LandingPage() {
     // Subscribe to store changes
     const unsubscribe = useAuthStore.subscribe((state) => {
       if (state.isHydrated && state.isAuthenticated) {
-        const hasCompletedSetup = localStorage.getItem("pisp-setup-complete");
-        if (hasCompletedSetup === "true") {
-          router.replace("/dashboard");
-        } else {
-          router.replace("/setup");
-        }
+        router.replace("/dashboard");
       }
     });
 

@@ -12,21 +12,14 @@ export function middleware(request: NextRequest) {
   // Get wallet auth from cookies (set when wallet connects)
   const walletAuth = request.cookies.get("pisp-wallet-auth");
   
-  // Get setup completion status from cookies
-  const setupComplete = request.cookies.get("pisp-setup-complete");
-  
   // Check if user is authenticated (via wallet connection)
   const isAuthenticated = walletAuth?.value === "true";
 
   // Public routes - allow access without authentication
   if (pathname === "/") {
-    // If user is already authenticated, redirect to appropriate page
+    // If user is already authenticated, go to dashboard (skip onboarding)
     if (isAuthenticated) {
-      if (setupComplete?.value === "true") {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      } else {
-        return NextResponse.redirect(new URL("/setup", request.url));
-      }
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return NextResponse.next();
   }
@@ -47,19 +40,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Setup page - only accessible if not completed
+  // Onboarding flow is disabled - all authenticated users go to dashboard
+  // Skip setup page check - redirect /setup to /dashboard
   if (pathname === "/setup") {
-    if (setupComplete?.value === "true") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-    return NextResponse.next();
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Dashboard and other protected pages - require setup completion
+  // Dashboard and other protected pages - allow access without setup completion
   if (pathname === "/dashboard" || pathname === "/trades" || pathname === "/goals") {
-    if (setupComplete?.value !== "true") {
-      return NextResponse.redirect(new URL("/setup", request.url));
-    }
     return NextResponse.next();
   }
 
