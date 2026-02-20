@@ -9,10 +9,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can connect Solana wallet (Phantom, Solflare, Backpack) to authenticate
-- [ ] **AUTH-02**: User session persists across page refresh via wallet connection state
+- [x] **AUTH-01**: User can connect Solana wallet (Phantom, Solflare, Backpack) to authenticate
+- [x] **AUTH-02**: User session persists across page refresh via wallet connection state
 - [ ] **AUTH-03**: User is redirected to appropriate page based on auth + setup status (landing → setup → dashboard)
-- [ ] **AUTH-04**: User can disconnect wallet and return to landing page
+- [x] **AUTH-04**: User can disconnect wallet and return to landing page
 
 ### Wallet Setup
 
@@ -114,10 +114,10 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Complete |
 | SETUP-01 | Phase 1 | Pending |
 | SETUP-02 | Phase 1 | Pending |
 | SETUP-03 | Phase 1 | Pending |

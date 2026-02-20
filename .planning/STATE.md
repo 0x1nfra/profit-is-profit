@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 1 of 5 (Foundation & Authentication)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-20 — Roadmap created with 5 phases covering all 41 v1 requirements
+Plan: 1 of 2 in current phase
+Status: Executing
+Last activity: 2026-02-20 — Completed Plan 01: Wallet authentication with Phantom/Solflare adapters
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: - min
-- Total execution time: 0.0 hours
+- Total plans completed: 1
+- Average duration: 9 min
+- Total execution time: 0.15 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation-authentication | 1 | 9 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: No data yet
+- Last 5 plans: 9min
+- Trend: Just started
 
 *Updated after each plan completion*
 
@@ -46,6 +46,10 @@ Recent decisions affecting current work:
 - Wallet-first auth — Target users are crypto-native traders, wallet is prerequisite for app functionality
 - Manual cashout (no custody) — Security, no private keys in MVP, user transfers SOL manually
 - Helius Wallet API over raw tx parsing — Cleaner abstraction, parsed balance changes per swap
+- Removed Backpack wallet adapter — Not available in @solana/wallet-adapter-wallets package (01-01)
+- ClientWalletProvider wrapper pattern — Next.js 16 compatibility with dynamic imports (01-01)
+- Timestamp-based verification messages — Simpler than UUID or backend nonce storage (01-01)
+- 7-day session TTL stored client-side — Standard web app session length (01-01)
 
 ### Pending Todos
 
@@ -55,11 +59,11 @@ None yet.
 
 **From research:**
 - Helius API beta stability — May have undocumented edge cases, need extensive testing with real wallets during Phase 1
-- Wallet signature verification pattern — Need to choose nonce generation strategy (timestamp vs UUID vs Supabase challenge) during Phase 1 planning
+- ~~Wallet signature verification pattern — Need to choose nonce generation strategy (timestamp vs UUID vs Supabase challenge) during Phase 1 planning~~ **RESOLVED:** Using timestamp-based messages (01-01)
 - Cashout cap tuning — Hard cap of 65% needs validation, consider user override during Phase 3
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-foundation-authentication/01-CONTEXT.md
+Last session: 2026-02-20T08:57:40Z
+Stopped at: Completed 01-01-PLAN.md (Wallet authentication)
+Resume file: .planning/phases/01-foundation-authentication/01-01-SUMMARY.md
