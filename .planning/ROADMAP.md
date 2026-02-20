@@ -50,7 +50,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Enhanced API client refactor + trade parser with position boundary detection (TDD)
+- [x] 02-01-PLAN.md — Enhanced API client refactor + trade parser with position boundary detection (TDD)
 - [ ] 02-02-PLAN.md — Price service, trade-service orchestration, API route, dashboard sync UI
 
 ### Phase 3: Dashboard & Cashout Flow

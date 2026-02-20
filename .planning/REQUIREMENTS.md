@@ -32,12 +32,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Trade Detection
 
-- [ ] **TRADE-01**: System fetches transaction history from Helius Wallet API `/v1/wallet/{wallet}/history`
-- [ ] **TRADE-02**: System groups swap transactions by token mint into bundled trades
-- [ ] **TRADE-03**: System detects position closure when token balance = 0 via Helius `/v1/wallet/{wallet}/balances`
-- [ ] **TRADE-04**: System calculates net profit (total exit SOL - total entry SOL) per closed trade
-- [ ] **TRADE-05**: System calculates ROI percentage per trade
-- [ ] **TRADE-06**: System handles dust amounts (< 0.000001 tokens treated as 0)
+- [x] **TRADE-01**: System fetches transaction history from Helius Wallet API `/v1/wallet/{wallet}/history`
+- [x] **TRADE-02**: System groups swap transactions by token mint into bundled trades
+- [x] **TRADE-03**: System detects position closure when token balance = 0 via Helius `/v1/wallet/{wallet}/balances`
+- [x] **TRADE-04**: System calculates net profit (total exit SOL - total entry SOL) per closed trade
+- [x] **TRADE-05**: System calculates ROI percentage per trade
+- [x] **TRADE-06**: System handles dust amounts (< 0.000001 tokens treated as 0)
 - [ ] **TRADE-07**: System processes multiple token closures in a single refresh
 
 ### Cashout System
@@ -122,12 +122,12 @@ Deferred to future release. Tracked but not in current roadmap.
 | SETUP-02 | Phase 1 | Complete |
 | SETUP-03 | Phase 1 | Complete |
 | SETUP-04 | Phase 1 | Complete |
-| TRADE-01 | Phase 2 | Pending |
-| TRADE-02 | Phase 2 | Pending |
-| TRADE-03 | Phase 2 | Pending |
-| TRADE-04 | Phase 2 | Pending |
-| TRADE-05 | Phase 2 | Pending |
-| TRADE-06 | Phase 2 | Pending |
+| TRADE-01 | Phase 2 | Complete |
+| TRADE-02 | Phase 2 | Complete |
+| TRADE-03 | Phase 2 | Complete |
+| TRADE-04 | Phase 2 | Complete |
+| TRADE-05 | Phase 2 | Complete |
+| TRADE-06 | Phase 2 | Complete |
 | TRADE-07 | Phase 2 | Pending |
 | DASH-01 | Phase 3 | Pending |
 | DASH-02 | Phase 3 | Pending |

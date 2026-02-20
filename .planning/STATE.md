@@ -5,32 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Prevent traders from giving back profits by automatically calculating how much to take off the table after every winning trade, based on wallet health and trade performance.
-**Current focus:** Phase 1 - Foundation & Authentication
+**Current focus:** Phase 2 - Trade Detection & Sync
 
 ## Current Position
 
-Phase: 1 of 5 (Foundation & Authentication)
-Plan: 2 of 2 in current phase
+Phase: 2 of 5 (Trade Detection & Sync)
+Plan: 1 of 2 in current phase
 Status: Complete
-Last activity: 2026-02-20 — Completed Plan 02: Wallet setup, balance API, and dashboard
+Last activity: 2026-02-20 — Completed Plan 01: Enhanced API client and position boundary detection
 
-Progress: [██░░░░░░░░] 20%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 3
 - Average duration: 9 min
-- Total execution time: 0.30 hours
+- Total execution time: 0.45 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 2 | 18 min | 9 min |
+| 02-trade-detection-sync | 1 | 9 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: 9min, 9min
+- Last 5 plans: 9min, 9min, 9min
 - Trend: Consistent velocity
 
 *Updated after each plan completion*
@@ -54,6 +55,10 @@ Recent decisions affecting current work:
 - CoinGecko for SOL/USD price — Public API with 60s cache, fallback to $150 (01-02)
 - Checkbox confirmation for trading wallet — Explicit user acknowledgment of pre-filled address (01-02)
 - Info tooltip on vault wallet — Inline education on vault concept (01-02)
+- Enhanced API events.swap as primary SOL source — Avoids double-counting from nativeTransfers (02-01)
+- wSOL filtering at extraction level — Prevents false trades from wrapped SOL operations (02-01)
+- Union type for backward compatibility — Support both HeliusTransaction and EnhancedTransaction during migration (02-01)
+- Cursor-based pagination with rate limiting — 200ms delays prevent rate limit issues while backfilling (02-01)
 
 ### Pending Todos
 
@@ -69,5 +74,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-trade-detection-sync/02-CONTEXT.md
+Stopped at: Completed 02-01-PLAN.md
+Resume file: .planning/phases/02-trade-detection-sync/02-02-PLAN.md
