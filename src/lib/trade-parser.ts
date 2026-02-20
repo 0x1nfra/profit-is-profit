@@ -66,6 +66,7 @@ export function parseTrades(
     );
 
     if (aggregated) {
+      const roiMultiplier = 1 + (aggregated.roi / 100);
       parsedTrades.push({
         tokenMint: aggregated.tokenMint,
         tokenSymbol: aggregated.tokenSymbol,
@@ -73,6 +74,8 @@ export function parseTrades(
         totalExit: aggregated.totalExitSol,
         netProfit: aggregated.netProfitSol,
         roi: aggregated.roi,
+        roiMultiplier,
+        totalFeesSol: aggregated.totalFeesSol,
         positionClosed: aggregated.positionClosed,
         positionOpenedAt: aggregated.firstTransactionAt,
         positionClosedAt: aggregated.lastTransactionAt,
@@ -118,8 +121,12 @@ export function aggregateTokenTransactions(
 
   let totalEntrySol = 0;
   let totalExitSol = 0;
+  let totalFeesSol = 0;
 
   for (const tx of sortedTxs) {
+    // Track transaction fees (convert to SOL if needed)
+    const txFee = typeof tx.fee === 'number' ? tx.fee : 0;
+    totalFeesSol += txFee;
     // Get token transfers for this wallet
     const tokenTransfers = extractTokenTransfers(tx, walletAddress);
 
@@ -163,6 +170,7 @@ export function aggregateTokenTransactions(
     totalExitSol: normalizeAmount(totalExitSol),
     netProfitSol: normalizeAmount(netProfitSol),
     roi,
+    totalFeesSol: normalizeAmount(totalFeesSol),
     transactions: sortedTxs,
     positionClosed: false, // Will be determined separately
     firstTransactionAt,

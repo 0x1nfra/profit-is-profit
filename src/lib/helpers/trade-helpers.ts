@@ -3,7 +3,79 @@
 // src/lib/helpers/trade-helpers.ts
 // =============================================
 
-import type { HeliusTransaction, TokenTransfer } from "@/types";
+import type { HeliusTransaction, EnhancedTransaction, TokenTransfer, SwapAmounts } from "@/types";
+import { WSOL_MINT } from "../constants";
+
+// =============================================
+// ENHANCED API - SWAP AMOUNT EXTRACTION
+// =============================================
+
+/**
+ * Extracts swap amounts from Enhanced API events.swap data
+ * Uses events.swap as primary source, NOT nativeTransfers (to avoid double-counting)
+ *
+ * @param tx - The Enhanced transaction
+ * @param walletAddress - The wallet address
+ * @returns SwapAmounts with SOL spent/received, token mint, and fee
+ */
+export function extractSwapAmounts(
+  tx: EnhancedTransaction,
+  walletAddress: string,
+): SwapAmounts {
+  const fee = tx.fee / 1e9; // Convert lamports to SOL
+
+  // Fallback if no swap events
+  if (!tx.events?.swap) {
+    return {
+      solSpent: 0,
+      solReceived: 0,
+      tokenMint: '',
+      fee,
+    };
+  }
+
+  const swap = tx.events.swap;
+  let solSpent = 0;
+  let solReceived = 0;
+  let tokenMint = '';
+
+  // Extract SOL spent (buying tokens)
+  if (swap.nativeInput && swap.nativeInput.account === walletAddress) {
+    solSpent = parseFloat(swap.nativeInput.amount) / 1e9;
+  }
+
+  // Extract SOL received (selling tokens)
+  if (swap.nativeOutput && swap.nativeOutput.account === walletAddress) {
+    solReceived = parseFloat(swap.nativeOutput.amount) / 1e9;
+  }
+
+  // Extract token mint - prefer tokenOutputs (buy), fallback to tokenInputs (sell)
+  // Skip wSOL mint
+  if (swap.tokenOutputs && swap.tokenOutputs.length > 0) {
+    for (const output of swap.tokenOutputs) {
+      if (output.mint !== WSOL_MINT) {
+        tokenMint = output.mint;
+        break;
+      }
+    }
+  }
+
+  if (!tokenMint && swap.tokenInputs && swap.tokenInputs.length > 0) {
+    for (const input of swap.tokenInputs) {
+      if (input.mint !== WSOL_MINT) {
+        tokenMint = input.mint;
+        break;
+      }
+    }
+  }
+
+  return {
+    solSpent,
+    solReceived,
+    tokenMint,
+    fee,
+  };
+}
 
 // =============================================
 // SWAP DETECTION
@@ -238,19 +310,23 @@ export function normalizeAmount(amount: number): number {
 
 /**
  * Extracts unique token mints from a list of transactions
+ * Filters out wSOL mint to prevent false trades
  *
- * @param transactions - Array of Helius transactions
- * @returns Array of unique token mint addresses
+ * @param transactions - Array of Helius or Enhanced transactions
+ * @returns Array of unique token mint addresses (excluding wSOL)
  */
 export function extractUniqueTokenMints(
-  transactions: HeliusTransaction[],
+  transactions: HeliusTransaction[] | EnhancedTransaction[],
 ): string[] {
   const mints = new Set<string>();
 
   for (const tx of transactions) {
     if (tx.tokenTransfers) {
       for (const transfer of tx.tokenTransfers) {
-        mints.add(transfer.mint);
+        // Skip wSOL mint
+        if (transfer.mint !== WSOL_MINT) {
+          mints.add(transfer.mint);
+        }
       }
     }
   }

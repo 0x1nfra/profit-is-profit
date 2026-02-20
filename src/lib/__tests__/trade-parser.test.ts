@@ -10,8 +10,10 @@ import {
   detectPositionClosure,
   updatePositionClosureStatus,
 } from '../trade-parser'
-import { HeliusTransaction, TokenBalance, TokenTransfer, AggregatedTrade } from '@/types'
+import { extractSwapAmounts, extractUniqueTokenMints } from '../helpers/trade-helpers'
+import { HeliusTransaction, EnhancedTransaction, TokenBalance, TokenTransfer, AggregatedTrade } from '@/types'
 import { ValidationError } from '@/types'
+import { WSOL_MINT } from '../constants'
 
 // =============================================
 // TEST FIXTURES
@@ -256,7 +258,11 @@ describe('aggregateTokenTransactions', () => {
         timestamp: 1000,
         type: 'SWAP',
         tokenTransfers: [
-          createTokenTransfer({ mint: tokenMint, toUserAccount: walletAddress }),
+          createTokenTransfer({
+            mint: tokenMint,
+            fromUserAccount: otherAddress,
+            toUserAccount: walletAddress
+          }),
         ],
         nativeTransfers: [{ fromUserAccount: walletAddress, toUserAccount: otherAddress, amount: 1000000000 }],
       }),
@@ -264,7 +270,11 @@ describe('aggregateTokenTransactions', () => {
         timestamp: 2000,
         type: 'SWAP',
         tokenTransfers: [
-          createTokenTransfer({ mint: tokenMint, fromUserAccount: walletAddress }),
+          createTokenTransfer({
+            mint: tokenMint,
+            fromUserAccount: walletAddress,
+            toUserAccount: otherAddress
+          }),
         ],
         nativeTransfers: [{ fromUserAccount: otherAddress, toUserAccount: walletAddress, amount: 2000000000 }],
       }),
@@ -375,6 +385,7 @@ describe('updatePositionClosureStatus', () => {
         totalExitSol: 2,
         netProfitSol: 1,
         roi: 100,
+        totalFeesSol: 0,
         transactions: [],
         positionClosed: false,
         firstTransactionAt: new Date(),
@@ -386,6 +397,7 @@ describe('updatePositionClosureStatus', () => {
         totalExitSol: 2,
         netProfitSol: 1,
         roi: 100,
+        totalFeesSol: 0,
         transactions: [],
         positionClosed: false,
         firstTransactionAt: new Date(),
@@ -411,6 +423,7 @@ describe('updatePositionClosureStatus', () => {
       totalExitSol: 2,
       netProfitSol: 1,
       roi: 100,
+      totalFeesSol: 0,
       transactions: [],
       positionClosed: false,
       firstTransactionAt: new Date('2024-01-01'),
@@ -426,5 +439,267 @@ describe('updatePositionClosureStatus', () => {
     expect(updated.totalExitSol).toBe(2)
     expect(updated.netProfitSol).toBe(1)
     expect(updated.roi).toBe(100)
+  })
+})
+
+// =============================================
+// ENHANCED API - extractSwapAmounts TESTS
+// =============================================
+
+const createEnhancedTx = (overrides: Partial<EnhancedTransaction> = {}): EnhancedTransaction => ({
+  description: 'Test swap',
+  type: 'SWAP',
+  source: 'JUPITER',
+  fee: 5000, // lamports
+  feePayer: walletAddress,
+  signature: 'test-sig-' + Math.random().toString(36).substring(7),
+  slot: 123456,
+  timestamp: Date.now() / 1000,
+  nativeTransfers: [],
+  tokenTransfers: [],
+  events: {},
+  ...overrides,
+})
+
+describe('extractSwapAmounts', () => {
+  it('extracts solSpent from events.swap.nativeInput when account matches wallet', () => {
+    const tx = createEnhancedTx({
+      fee: 5000,
+      events: {
+        swap: {
+          nativeInput: {
+            account: walletAddress,
+            amount: '1000000000', // 1 SOL in lamports
+          },
+          tokenOutputs: [
+            {
+              userAccount: walletAddress,
+              tokenAccount: 'token-acc',
+              mint: 'token-mint',
+              rawTokenAmount: { tokenAmount: '1000', decimals: 6 },
+            },
+          ],
+          tokenInputs: [],
+          tokenFees: [],
+          nativeFees: [],
+          innerSwaps: [],
+        },
+      },
+    })
+
+    const amounts = extractSwapAmounts(tx, walletAddress)
+    expect(amounts.solSpent).toBe(1) // 1000000000 / 1e9 = 1 SOL
+    expect(amounts.solReceived).toBe(0)
+    expect(amounts.tokenMint).toBe('token-mint')
+    expect(amounts.fee).toBe(0.000005) // 5000 / 1e9
+  })
+
+  it('extracts solReceived from events.swap.nativeOutput when account matches wallet', () => {
+    const tx = createEnhancedTx({
+      fee: 5000,
+      events: {
+        swap: {
+          nativeOutput: {
+            account: walletAddress,
+            amount: '2000000000', // 2 SOL in lamports
+          },
+          tokenInputs: [
+            {
+              userAccount: walletAddress,
+              tokenAccount: 'token-acc',
+              mint: 'token-mint-sell',
+              rawTokenAmount: { tokenAmount: '500', decimals: 6 },
+            },
+          ],
+          tokenOutputs: [],
+          tokenFees: [],
+          nativeFees: [],
+          innerSwaps: [],
+        },
+      },
+    })
+
+    const amounts = extractSwapAmounts(tx, walletAddress)
+    expect(amounts.solSpent).toBe(0)
+    expect(amounts.solReceived).toBe(2) // 2000000000 / 1e9 = 2 SOL
+    expect(amounts.tokenMint).toBe('token-mint-sell')
+    expect(amounts.fee).toBe(0.000005)
+  })
+
+  it('extracts tokenMint from tokenOutputs (buy) when available', () => {
+    const tx = createEnhancedTx({
+      events: {
+        swap: {
+          nativeInput: { account: walletAddress, amount: '1000000000' },
+          tokenOutputs: [
+            {
+              userAccount: walletAddress,
+              tokenAccount: 'token-acc',
+              mint: 'bought-token-mint',
+              rawTokenAmount: { tokenAmount: '100', decimals: 9 },
+            },
+          ],
+          tokenInputs: [],
+          tokenFees: [],
+          nativeFees: [],
+          innerSwaps: [],
+        },
+      },
+    })
+
+    const amounts = extractSwapAmounts(tx, walletAddress)
+    expect(amounts.tokenMint).toBe('bought-token-mint')
+  })
+
+  it('extracts tokenMint from tokenInputs (sell) when available', () => {
+    const tx = createEnhancedTx({
+      events: {
+        swap: {
+          nativeOutput: { account: walletAddress, amount: '2000000000' },
+          tokenInputs: [
+            {
+              userAccount: walletAddress,
+              tokenAccount: 'token-acc',
+              mint: 'sold-token-mint',
+              rawTokenAmount: { tokenAmount: '500', decimals: 6 },
+            },
+          ],
+          tokenOutputs: [],
+          tokenFees: [],
+          nativeFees: [],
+          innerSwaps: [],
+        },
+      },
+    })
+
+    const amounts = extractSwapAmounts(tx, walletAddress)
+    expect(amounts.tokenMint).toBe('sold-token-mint')
+  })
+
+  it('returns zeros when events.swap is missing (graceful fallback)', () => {
+    const tx = createEnhancedTx({
+      fee: 5000,
+      events: {},
+    })
+
+    const amounts = extractSwapAmounts(tx, walletAddress)
+    expect(amounts.solSpent).toBe(0)
+    expect(amounts.solReceived).toBe(0)
+    expect(amounts.tokenMint).toBe('')
+    expect(amounts.fee).toBe(0.000005)
+  })
+
+  it('skips wSOL mint when extracting token mint', () => {
+    const tx = createEnhancedTx({
+      events: {
+        swap: {
+          nativeInput: { account: walletAddress, amount: '1000000000' },
+          tokenOutputs: [
+            {
+              userAccount: walletAddress,
+              tokenAccount: 'wsol-acc',
+              mint: WSOL_MINT,
+              rawTokenAmount: { tokenAmount: '1000', decimals: 9 },
+            },
+            {
+              userAccount: walletAddress,
+              tokenAccount: 'token-acc',
+              mint: 'real-token-mint',
+              rawTokenAmount: { tokenAmount: '500', decimals: 6 },
+            },
+          ],
+          tokenInputs: [],
+          tokenFees: [],
+          nativeFees: [],
+          innerSwaps: [],
+        },
+      },
+    })
+
+    const amounts = extractSwapAmounts(tx, walletAddress)
+    // Should skip wSOL and use the real token
+    expect(amounts.tokenMint).toBe('real-token-mint')
+  })
+})
+
+// =============================================
+// ENHANCED API - extractUniqueTokenMints TESTS
+// =============================================
+
+describe('extractUniqueTokenMints - wSOL filtering', () => {
+  it('filters out wSOL mint from results', () => {
+    const txs = [
+      createEnhancedTx({
+        tokenTransfers: [
+          {
+            fromUserAccount: walletAddress,
+            toUserAccount: otherAddress,
+            fromTokenAccount: 'acc1',
+            toTokenAccount: 'acc2',
+            tokenAmount: 100,
+            mint: WSOL_MINT,
+          },
+          {
+            fromUserAccount: walletAddress,
+            toUserAccount: otherAddress,
+            fromTokenAccount: 'acc3',
+            toTokenAccount: 'acc4',
+            tokenAmount: 200,
+            mint: 'real-token-mint',
+          },
+        ],
+      }),
+    ]
+
+    const mints = extractUniqueTokenMints(txs as any)
+    expect(mints).toEqual(['real-token-mint'])
+    expect(mints).not.toContain(WSOL_MINT)
+  })
+
+  it('returns only non-wSOL token mints', () => {
+    const txs = [
+      createEnhancedTx({
+        tokenTransfers: [
+          {
+            fromUserAccount: walletAddress,
+            toUserAccount: otherAddress,
+            fromTokenAccount: 'acc1',
+            toTokenAccount: 'acc2',
+            tokenAmount: 100,
+            mint: 'token-a',
+          },
+        ],
+      }),
+      createEnhancedTx({
+        tokenTransfers: [
+          {
+            fromUserAccount: walletAddress,
+            toUserAccount: otherAddress,
+            fromTokenAccount: 'acc3',
+            toTokenAccount: 'acc4',
+            tokenAmount: 200,
+            mint: 'token-b',
+          },
+        ],
+      }),
+      createEnhancedTx({
+        tokenTransfers: [
+          {
+            fromUserAccount: walletAddress,
+            toUserAccount: otherAddress,
+            fromTokenAccount: 'acc5',
+            toTokenAccount: 'acc6',
+            tokenAmount: 300,
+            mint: WSOL_MINT,
+          },
+        ],
+      }),
+    ]
+
+    const mints = extractUniqueTokenMints(txs as any)
+    expect(mints).toHaveLength(2)
+    expect(mints).toContain('token-a')
+    expect(mints).toContain('token-b')
+    expect(mints).not.toContain(WSOL_MINT)
   })
 })

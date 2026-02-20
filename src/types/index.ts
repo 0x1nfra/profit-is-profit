@@ -322,7 +322,7 @@ export interface AggregatedTrade {
   netProfitSol: number;
   roi: number;
   totalFeesSol: number;
-  transactions: EnhancedTransaction[];
+  transactions: HeliusTransaction[] | EnhancedTransaction[];
   positionClosed: boolean;
   firstTransactionAt: Date;
   lastTransactionAt: Date;
