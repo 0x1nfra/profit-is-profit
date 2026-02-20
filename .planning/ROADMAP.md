@@ -30,10 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can input and save trading wallet address and vault wallet address (validated as different)
   4. User sees initial wallet balances (SOL + USD) after completing setup
   5. User is automatically routed to setup page if not configured, dashboard if configured
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- TBD (will be created during plan-phase)
+- [ ] 01-01-PLAN.md — Wallet adapter setup, WalletProvider, Zustand store, landing page with connect/sign/disconnect
+- [ ] 01-02-PLAN.md — Wallet setup form, save API, Helius balance API, dashboard, route middleware
 
 ### Phase 2: Trade Detection & Sync
 **Goal**: System accurately detects closed trades from Helius transaction history and calculates P&L
@@ -106,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 0/TBD | Not started | - |
+| 1. Foundation & Authentication | 0/2 | Planning complete | - |
 | 2. Trade Detection & Sync | 0/TBD | Not started | - |
 | 3. Dashboard & Cashout Flow | 0/TBD | Not started | - |
 | 4. Goal Tracking | 0/TBD | Not started | - |
