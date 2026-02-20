@@ -129,7 +129,19 @@ export async function POST(request: NextRequest) {
       userId,
     };
 
-    return NextResponse.json(response, { status: 200 });
+    // Set auth cookie for middleware (7 days expiry to match session TTL)
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    const nextResponse = NextResponse.json(response, { status: 200 });
+
+    nextResponse.cookies.set('pisp-auth', publicKey, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: sevenDays / 1000, // maxAge is in seconds
+      path: '/',
+    });
+
+    return nextResponse;
   } catch (error) {
     console.error('Auth verify error:', error);
     const response: AuthVerifyResponse = {

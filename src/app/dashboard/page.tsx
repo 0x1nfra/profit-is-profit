@@ -112,6 +112,9 @@ export default function DashboardPage() {
 
   const handleDisconnect = async () => {
     try {
+      // Call signout API to clear cookies
+      await fetch('/api/auth/signout', { method: 'POST' });
+
       await disconnect();
       await signOut();
       reset();

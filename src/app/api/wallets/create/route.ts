@@ -174,7 +174,18 @@ export async function POST(request: NextRequest) {
       success: true,
     };
 
-    return NextResponse.json(response, { status: 201 });
+    // Set setup-complete cookie for middleware
+    const nextResponse = NextResponse.json(response, { status: 201 });
+
+    nextResponse.cookies.set('pisp-setup-complete', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      path: '/',
+    });
+
+    return nextResponse;
   } catch (error) {
     console.error('Wallet create error:', error);
     const response: WalletCreateResponse = {
