@@ -32,20 +32,32 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 // SERVER-SIDE SUPABASE CLIENT (for API routes)
 // =============================================
 
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let _supabaseAdmin: ReturnType<typeof createClient<Database>> | null = null;
 
-export const supabaseAdmin = supabaseServiceKey
-  ? createClient<Database>(supabaseUrl, supabaseServiceKey, {
+export function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseServiceKey) {
+      throw new Error(
+        "SUPABASE_SERVICE_ROLE_KEY is required for server-side operations",
+      );
+    }
+    _supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
       },
-    })
-  : (() => {
-      throw new Error(
-        "SUPABASE_SERVICE_ROLE_KEY is required for server-side operations",
-      );
-    })();
+    });
+  }
+  return _supabaseAdmin;
+}
+
+// Backwards-compatible export — only throws when accessed, not at import time
+export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient<Database>>, {
+  get(_, prop) {
+    return (getSupabaseAdmin() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
 
 // =============================================
 // HELPER FUNCTIONS
