@@ -68,6 +68,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-20T09:12:15Z
-Stopped at: Completed 01-02-PLAN.md (Wallet setup & dashboard)
-Resume file: .planning/phases/01-foundation-authentication/01-02-SUMMARY.md
+Last session: 2026-02-20
+Stopped at: Phase 2 context gathered
+Resume file: .planning/phases/02-trade-detection-sync/02-CONTEXT.md
