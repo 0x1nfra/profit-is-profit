@@ -148,6 +148,140 @@ async function makeHeliusRequest<T>(
 }
 
 // =============================================
+// ENHANCED API FUNCTIONS
+// =============================================
+
+/**
+ * Fetches swap transaction history for a Solana address using Enhanced Transactions API
+ *
+ * @param address - The wallet address to fetch swap transactions for
+ * @param options - Optional parameters (before signature for pagination)
+ * @returns Array of Enhanced transactions with type=SWAP
+ * @throws ValidationError if address is invalid
+ * @throws HeliusError on API errors
+ */
+export async function getSwapHistory(
+  address: string,
+  options?: { before?: string },
+): Promise<import("@/types").EnhancedTransaction[]> {
+  // Validate address
+  validateSolanaAddress(address);
+
+  const apiKey = getHeliusApiKey();
+
+  // Build Enhanced API URL
+  let url = `${HELIUS_CONFIG.ENHANCED_API_BASE_URL}/v0/addresses/${address}/transactions?api-key=${apiKey}&type=SWAP&limit=${HELIUS_CONFIG.DEFAULT_SWAP_LIMIT}`;
+
+  if (options?.before) {
+    url += `&before-signature=${options.before}`;
+  }
+
+  // Wait for rate limit
+  await rateLimiter.waitForRateLimit();
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    HELIUS_CONFIG.REQUEST_TIMEOUT_MS,
+  );
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      // Handle rate limiting (429)
+      if (response.status === 429) {
+        throw new HeliusError(
+          "Rate limit exceeded. Please try again later.",
+          429,
+        );
+      }
+
+      // Handle other HTTP errors
+      const errorText = await response.text();
+      throw new HeliusError(
+        `Helius API error: ${response.status} - ${errorText}`,
+        response.status,
+      );
+    }
+
+    const data = await response.json();
+
+    return data as import("@/types").EnhancedTransaction[];
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof HeliusError) {
+      throw error;
+    }
+
+    // Handle timeout
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new HeliusError(
+        `Request timeout after ${HELIUS_CONFIG.REQUEST_TIMEOUT_MS}ms`,
+        408,
+      );
+    }
+
+    throw formatHeliusError(error);
+  }
+}
+
+/**
+ * Backfills swap transaction history by paging through all available transactions
+ * Uses cursor-based pagination with before-signature parameter
+ *
+ * @param address - The wallet address to fetch swap transactions for
+ * @param maxTransactions - Maximum number of transactions to fetch (default 500)
+ * @returns Array of all fetched Enhanced transactions
+ * @throws ValidationError if address is invalid
+ * @throws HeliusError on API errors
+ */
+export async function backfillSwapHistory(
+  address: string,
+  maxTransactions: number = HELIUS_CONFIG.MAX_BACKFILL_TRANSACTIONS,
+): Promise<import("@/types").EnhancedTransaction[]> {
+  // Validate address
+  validateSolanaAddress(address);
+
+  const allTransactions: import("@/types").EnhancedTransaction[] = [];
+  let cursor: string | undefined = undefined;
+
+  while (allTransactions.length < maxTransactions) {
+    // Fetch next batch
+    const batch = await getSwapHistory(address, { before: cursor });
+
+    // Stop if empty batch
+    if (batch.length === 0) {
+      break;
+    }
+
+    // Add to accumulator
+    allTransactions.push(...batch);
+
+    // Stop if we've reached the limit
+    if (allTransactions.length >= maxTransactions) {
+      break;
+    }
+
+    // Use last signature as cursor for next page
+    cursor = batch[batch.length - 1].signature;
+
+    // Wait between pages to respect rate limits
+    await new Promise((resolve) =>
+      setTimeout(resolve, HELIUS_CONFIG.BACKFILL_RATE_LIMIT_MS),
+    );
+  }
+
+  return allTransactions;
+}
+
+// =============================================
 // PUBLIC API FUNCTIONS
 // =============================================
 
