@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 1 of 5 (Foundation & Authentication)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-02-20 — Completed Plan 01: Wallet authentication with Phantom/Solflare adapters
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-02-20 — Completed Plan 02: Wallet setup, balance API, and dashboard
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
+- Total plans completed: 2
 - Average duration: 9 min
-- Total execution time: 0.15 hours
+- Total execution time: 0.30 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation-authentication | 1 | 9 min | 9 min |
+| 01-foundation-authentication | 2 | 18 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: 9min
-- Trend: Just started
+- Last 5 plans: 9min, 9min
+- Trend: Consistent velocity
 
 *Updated after each plan completion*
 
@@ -50,6 +50,10 @@ Recent decisions affecting current work:
 - ClientWalletProvider wrapper pattern — Next.js 16 compatibility with dynamic imports (01-01)
 - Timestamp-based verification messages — Simpler than UUID or backend nonce storage (01-01)
 - 7-day session TTL stored client-side — Standard web app session length (01-01)
+- Cookie-based auth for middleware — Simpler than Supabase SSR, set cookies on auth/setup (01-02)
+- CoinGecko for SOL/USD price — Public API with 60s cache, fallback to $150 (01-02)
+- Checkbox confirmation for trading wallet — Explicit user acknowledgment of pre-filled address (01-02)
+- Info tooltip on vault wallet — Inline education on vault concept (01-02)
 
 ### Pending Todos
 
@@ -64,6 +68,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-20T08:57:40Z
-Stopped at: Completed 01-01-PLAN.md (Wallet authentication)
-Resume file: .planning/phases/01-foundation-authentication/01-01-SUMMARY.md
+Last session: 2026-02-20T09:12:15Z
+Stopped at: Completed 01-02-PLAN.md (Wallet setup & dashboard)
+Resume file: .planning/phases/01-foundation-authentication/01-02-SUMMARY.md

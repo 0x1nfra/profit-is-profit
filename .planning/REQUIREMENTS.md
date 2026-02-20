@@ -11,15 +11,15 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **AUTH-01**: User can connect Solana wallet (Phantom, Solflare, Backpack) to authenticate
 - [x] **AUTH-02**: User session persists across page refresh via wallet connection state
-- [ ] **AUTH-03**: User is redirected to appropriate page based on auth + setup status (landing → setup → dashboard)
+- [x] **AUTH-03**: User is redirected to appropriate page based on auth + setup status (landing → setup → dashboard)
 - [x] **AUTH-04**: User can disconnect wallet and return to landing page
 
 ### Wallet Setup
 
-- [ ] **SETUP-01**: User can input trading wallet address (validated Solana address)
-- [ ] **SETUP-02**: User can input vault wallet address (validated, must differ from trading wallet)
-- [ ] **SETUP-03**: System fetches initial balances from Helius after wallet setup
-- [ ] **SETUP-04**: User is redirected to dashboard after completing setup
+- [x] **SETUP-01**: User can input trading wallet address (validated Solana address)
+- [x] **SETUP-02**: User can input vault wallet address (validated, must differ from trading wallet)
+- [x] **SETUP-03**: System fetches initial balances from Helius after wallet setup
+- [x] **SETUP-04**: User is redirected to dashboard after completing setup
 
 ### Dashboard
 
@@ -116,12 +116,12 @@ Deferred to future release. Tracked but not in current roadmap.
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
-| AUTH-03 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
-| SETUP-01 | Phase 1 | Pending |
-| SETUP-02 | Phase 1 | Pending |
-| SETUP-03 | Phase 1 | Pending |
-| SETUP-04 | Phase 1 | Pending |
+| SETUP-01 | Phase 1 | Complete |
+| SETUP-02 | Phase 1 | Complete |
+| SETUP-03 | Phase 1 | Complete |
+| SETUP-04 | Phase 1 | Complete |
 | TRADE-01 | Phase 2 | Pending |
 | TRADE-02 | Phase 2 | Pending |
 | TRADE-03 | Phase 2 | Pending |

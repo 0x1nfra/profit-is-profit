@@ -12,7 +12,7 @@ This roadmap transforms existing backend business logic (tier calculator, cashou
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Authentication** - User connects wallet, sets up trading + vault wallets, database ready
+- [x] **Phase 1: Foundation & Authentication** - User connects wallet, sets up trading + vault wallets, database ready
 - [ ] **Phase 2: Trade Detection & Sync** - System detects closed trades from Helius and calculates profit/loss
 - [ ] **Phase 3: Dashboard & Cashout Flow** - User sees wallet health, gets cashout recommendations, confirms cashouts
 - [ ] **Phase 4: Goal Tracking** - User sets monthly goals, tracks vault deposit progress
@@ -33,8 +33,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Wallet adapter setup, WalletProvider, Zustand store, landing page with connect/sign/disconnect
-- [ ] 01-02-PLAN.md — Wallet setup form, save API, Helius balance API, dashboard, route middleware
+- [x] 01-01-PLAN.md — Wallet adapter setup, WalletProvider, Zustand store, landing page with connect/sign/disconnect
+- [x] 01-02-PLAN.md — Wallet setup form, save API, Helius balance API, dashboard, route middleware
 
 ### Phase 2: Trade Detection & Sync
 **Goal**: System accurately detects closed trades from Helius transaction history and calculates P&L
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 0/2 | Planning complete | - |
+| 1. Foundation & Authentication | 2/2 | Complete | 2026-02-20 |
 | 2. Trade Detection & Sync | 0/TBD | Not started | - |
 | 3. Dashboard & Cashout Flow | 0/TBD | Not started | - |
 | 4. Goal Tracking | 0/TBD | Not started | - |
