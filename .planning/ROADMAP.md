@@ -47,10 +47,11 @@ Plans:
   4. System calculates ROI percentage for each closed trade
   5. System handles multiple token closures in single sync without duplication
   6. System treats dust amounts (<0.000001 tokens) as zero when detecting closure
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- TBD (will be created during plan-phase)
+- [ ] 02-01-PLAN.md — Enhanced API client refactor + trade parser with position boundary detection (TDD)
+- [ ] 02-02-PLAN.md — Price service, trade-service orchestration, API route, dashboard sync UI
 
 ### Phase 3: Dashboard & Cashout Flow
 **Goal**: Users see wallet health tier, recent trades with recommendations, and can confirm manual cashouts
@@ -108,7 +109,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 2/2 | Complete | 2026-02-20 |
-| 2. Trade Detection & Sync | 0/TBD | Not started | - |
+| 2. Trade Detection & Sync | 0/2 | Not started | - |
 | 3. Dashboard & Cashout Flow | 0/TBD | Not started | - |
 | 4. Goal Tracking | 0/TBD | Not started | - |
 | 5. Trade History & UI Polish | 0/TBD | Not started | - |
