@@ -114,54 +114,54 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase ? | Pending |
-| AUTH-02 | Phase ? | Pending |
-| AUTH-03 | Phase ? | Pending |
-| AUTH-04 | Phase ? | Pending |
-| SETUP-01 | Phase ? | Pending |
-| SETUP-02 | Phase ? | Pending |
-| SETUP-03 | Phase ? | Pending |
-| SETUP-04 | Phase ? | Pending |
-| DASH-01 | Phase ? | Pending |
-| DASH-02 | Phase ? | Pending |
-| DASH-03 | Phase ? | Pending |
-| DASH-04 | Phase ? | Pending |
-| DASH-05 | Phase ? | Pending |
-| DASH-06 | Phase ? | Pending |
-| TRADE-01 | Phase ? | Pending |
-| TRADE-02 | Phase ? | Pending |
-| TRADE-03 | Phase ? | Pending |
-| TRADE-04 | Phase ? | Pending |
-| TRADE-05 | Phase ? | Pending |
-| TRADE-06 | Phase ? | Pending |
-| TRADE-07 | Phase ? | Pending |
-| CASH-01 | Phase ? | Pending |
-| CASH-02 | Phase ? | Pending |
-| CASH-03 | Phase ? | Pending |
-| CASH-04 | Phase ? | Pending |
-| CASH-05 | Phase ? | Pending |
-| CASH-06 | Phase ? | Pending |
-| CASH-07 | Phase ? | Pending |
-| CASH-08 | Phase ? | Pending |
-| GOAL-01 | Phase ? | Pending |
-| GOAL-02 | Phase ? | Pending |
-| GOAL-03 | Phase ? | Pending |
-| GOAL-04 | Phase ? | Pending |
-| HIST-01 | Phase ? | Pending |
-| HIST-02 | Phase ? | Pending |
-| HIST-03 | Phase ? | Pending |
-| HIST-04 | Phase ? | Pending |
-| UI-01 | Phase ? | Pending |
-| UI-02 | Phase ? | Pending |
-| UI-03 | Phase ? | Pending |
-| UI-04 | Phase ? | Pending |
-| UI-05 | Phase ? | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| SETUP-01 | Phase 1 | Pending |
+| SETUP-02 | Phase 1 | Pending |
+| SETUP-03 | Phase 1 | Pending |
+| SETUP-04 | Phase 1 | Pending |
+| TRADE-01 | Phase 2 | Pending |
+| TRADE-02 | Phase 2 | Pending |
+| TRADE-03 | Phase 2 | Pending |
+| TRADE-04 | Phase 2 | Pending |
+| TRADE-05 | Phase 2 | Pending |
+| TRADE-06 | Phase 2 | Pending |
+| TRADE-07 | Phase 2 | Pending |
+| DASH-01 | Phase 3 | Pending |
+| DASH-02 | Phase 3 | Pending |
+| DASH-03 | Phase 3 | Pending |
+| DASH-04 | Phase 3 | Pending |
+| DASH-05 | Phase 3 | Pending |
+| DASH-06 | Phase 3 | Pending |
+| CASH-01 | Phase 3 | Pending |
+| CASH-02 | Phase 3 | Pending |
+| CASH-03 | Phase 3 | Pending |
+| CASH-04 | Phase 3 | Pending |
+| CASH-05 | Phase 3 | Pending |
+| CASH-06 | Phase 3 | Pending |
+| CASH-07 | Phase 3 | Pending |
+| CASH-08 | Phase 3 | Pending |
+| GOAL-01 | Phase 4 | Pending |
+| GOAL-02 | Phase 4 | Pending |
+| GOAL-03 | Phase 4 | Pending |
+| GOAL-04 | Phase 4 | Pending |
+| HIST-01 | Phase 5 | Pending |
+| HIST-02 | Phase 5 | Pending |
+| HIST-03 | Phase 5 | Pending |
+| HIST-04 | Phase 5 | Pending |
+| UI-01 | Phase 5 | Pending |
+| UI-02 | Phase 5 | Pending |
+| UI-03 | Phase 5 | Pending |
+| UI-04 | Phase 5 | Pending |
+| UI-05 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 41 total
-- Mapped to phases: 0
-- Unmapped: 41 ⚠️
+- Mapped to phases: 41
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-20*
-*Last updated: 2026-02-20 after initial definition*
+*Last updated: 2026-02-20 after roadmap creation*
