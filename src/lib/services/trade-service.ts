@@ -6,11 +6,17 @@
 import type { ParsedTrade, SyncResult, Trade, Wallet } from "@/types";
 import { ApiError, TradeStatus, WalletType } from "@/types";
 import { supabaseAdmin } from "../supabase";
-import { getSolBalance, getTransactionHistory } from "../helius-client";
-import { parseTrades } from "../trade-parser";
+import {
+  getSolBalance,
+  getSwapHistory,
+  backfillSwapHistory,
+  getTokenBalances,
+} from "../helius-client";
+import { parseTrades, updatePositionClosureStatus } from "../trade-parser";
 import { isValidSolanaAddress } from "../helpers/helius-helpers";
 import { calculateTier } from "../tier-calculator";
 import { calculateCashout } from "../cashout-calculator";
+import { getSolUsdPrice } from "./price-service";
 
 // =============================================
 // SYNC TRADES
@@ -19,10 +25,11 @@ import { calculateCashout } from "../cashout-calculator";
 /**
  * Syncs trades from Helius for a wallet and saves them to the database
  * This is the main orchestration function that:
- * 1. Fetches new transactions from Helius
+ * 1. Fetches new transactions from Helius (backfill or incremental)
  * 2. Parses them into trades
- * 3. Saves new trades to the database (idempotent)
- * 4. Updates wallet balances
+ * 3. Detects position closures via token balances
+ * 4. Saves closed trades to the database (idempotent)
+ * 5. Updates wallet balances with USD conversion
  *
  * @param walletAddress - The trading wallet address to sync
  * @param userId - The user ID who owns the wallet
@@ -53,32 +60,87 @@ export async function syncTrades(
       );
     }
 
-    // TODO: Use lastSync to filter transactions after this timestamp
-    // const lastSync = await getLastSyncTimestamp(walletAddress);
+    // Check last sync timestamp to determine backfill vs incremental
+    const lastSync = await getLastSyncTimestamp(walletAddress);
+    const lastSyncTimestamp = lastSync ? new Date(lastSync).getTime() / 1000 : null;
 
-    // Fetch transactions from Helius
-    const transactions = await getTransactionHistory(walletAddress, {
-      limit: 100,
-    });
+    // Fetch swap transactions from Helius Enhanced API
+    let allSwaps;
+    if (!lastSync) {
+      // First sync: backfill up to 500 swap transactions
+      allSwaps = await backfillSwapHistory(walletAddress, 500);
+    } else {
+      // Incremental: fetch recent swaps, filter by timestamp > lastSync
+      allSwaps = await getSwapHistory(walletAddress);
+      if (lastSyncTimestamp) {
+        allSwaps = allSwaps.filter((tx) => tx.timestamp > lastSyncTimestamp);
+      }
+    }
 
-    if (transactions.length === 0) {
-      // No transactions found, just return current state
+    // Get SOL/USD price for conversion
+    const solPrice = await getSolUsdPrice();
+
+    if (allSwaps.length === 0) {
+      // No new transactions found, just return current state
+      const solBalance = await getSolBalance(walletAddress);
+      await updateWalletBalance(wallet.id, solBalance, solPrice);
       const balances = await fetchWalletBalances(userId);
+
+      const syncTimestamp = new Date().toISOString();
+      await updateLastSyncTimestamp(wallet.id, syncTimestamp);
+
       return {
         success: true,
         newTrades: [],
         updatedBalances: balances,
-        lastSyncTimestamp: new Date().toISOString(),
+        lastSyncTimestamp: syncTimestamp,
+        closedTradesCount: 0,
+        totalProfitSol: 0,
+        totalProfitUsd: 0,
+        solPrice,
       };
     }
 
     // Parse transactions into trades
-    const parsedTrades = parseTrades(transactions, walletAddress);
+    const parsedTrades = parseTrades(allSwaps, walletAddress);
 
-    // Filter out trades that already exist in the database
+    // Detect position closures via token balances
+    const currentBalances = await getTokenBalances(walletAddress);
+    const aggregatedTrades = parsedTrades.map((trade) => ({
+      tokenMint: trade.tokenMint,
+      tokenSymbol: trade.tokenSymbol,
+      totalEntrySol: trade.totalEntry,
+      totalExitSol: trade.totalExit,
+      netProfitSol: trade.netProfit,
+      roi: trade.roi,
+      totalFeesSol: trade.totalFeesSol,
+      transactions: allSwaps.filter((tx) =>
+        tx.events.swap?.tokenInputs.some((t) => t.mint === trade.tokenMint) ||
+        tx.events.swap?.tokenOutputs.some((t) => t.mint === trade.tokenMint)
+      ),
+      positionClosed: trade.positionClosed,
+      firstTransactionAt: trade.positionOpenedAt || trade.positionClosedAt,
+      lastTransactionAt: trade.positionClosedAt,
+    }));
+
+    const tradesWithClosureStatus = updatePositionClosureStatus(
+      aggregatedTrades,
+      currentBalances,
+    );
+
+    // Only save CLOSED trades
+    const closedTrades = parsedTrades.filter((parsed) => {
+      const aggregated = tradesWithClosureStatus.find(
+        (t) => t.tokenMint === parsed.tokenMint,
+      );
+      return aggregated?.positionClosed;
+    });
+
+    // Filter out trades that already exist in the database and save new ones
     const newTrades: Trade[] = [];
+    let totalProfitSol = 0;
 
-    for (const parsed of parsedTrades) {
+    for (const parsed of closedTrades) {
       // Check if trade already exists (by token mint and close date)
       const existing = await findExistingTrade(
         userId,
@@ -87,18 +149,24 @@ export async function syncTrades(
       );
 
       if (!existing) {
+        // Calculate USD values
+        const netProfitUsd = parsed.netProfit * solPrice;
+
         // Save new trade
-        const saved = await saveTrade(parsed, userId, wallet.id);
+        const saved = await saveTrade(
+          { ...parsed, netProfitUsd },
+          userId,
+          wallet.id,
+          solPrice,
+        );
         newTrades.push(saved);
+        totalProfitSol += parsed.netProfit;
       }
     }
 
-    // TODO: Use currentBalances to detect position closures
-    // const currentBalances = await getTokenBalances(walletAddress);
+    // Update wallet balance with SOL and USD
     const solBalance = await getSolBalance(walletAddress);
-
-    // Update wallet balance
-    await updateWalletBalance(wallet.id, solBalance);
+    await updateWalletBalance(wallet.id, solBalance, solPrice);
 
     // Update last sync timestamp
     const syncTimestamp = new Date().toISOString();
@@ -107,11 +175,17 @@ export async function syncTrades(
     // Get updated balances
     const balances = await fetchWalletBalances(userId);
 
+    const totalProfitUsd = totalProfitSol * solPrice;
+
     return {
       success: true,
       newTrades,
       updatedBalances: balances,
       lastSyncTimestamp: syncTimestamp,
+      closedTradesCount: newTrades.length,
+      totalProfitSol,
+      totalProfitUsd,
+      solPrice,
     };
   } catch (error) {
     if (error instanceof ApiError) {
@@ -138,6 +212,7 @@ export async function syncTrades(
  * @param trade - The parsed trade data
  * @param userId - The user ID who owns the trade
  * @param walletId - The trading wallet ID
+ * @param solPrice - Current SOL/USD price
  * @returns The saved Trade record
  * @throws ApiError on save failures
  */
@@ -145,6 +220,7 @@ export async function saveTrade(
   trade: ParsedTrade,
   userId: string,
   walletId: string,
+  solPrice: number,
 ): Promise<Trade> {
   try {
     // Get user's current tier and state
@@ -173,7 +249,7 @@ export async function saveTrade(
 
     const cashoutResult = calculateCashout(cashoutInput);
 
-    // Create trade record
+    // Create trade record with new fields
     const tradeData = {
       user_id: userId,
       trading_wallet_id: walletId,
@@ -183,6 +259,9 @@ export async function saveTrade(
       total_exit_sol: trade.totalExit,
       net_profit_sol: trade.netProfit,
       roi_percent: trade.roi,
+      total_fees_sol: trade.totalFeesSol,
+      net_profit_usd: trade.netProfitUsd,
+      roi_multiplier: trade.roiMultiplier,
       tier_at_trade: currentTier,
       losing_streak_at_trade: losingStreak,
       base_cashout_percent: cashoutResult.breakdown.baseRate,
@@ -234,24 +313,24 @@ export async function saveTrade(
  *
  * @param walletId - The wallet ID to update
  * @param newBalance - The new SOL balance
+ * @param solPrice - Current SOL/USD price
  * @returns The updated Wallet record
  * @throws ApiError on update failures
- *
- * TODO: Implement SOL→USD conversion using a price service.
- * Currently balance_usd is set to 0 to avoid misleading data.
- * When price lookup is available, convert: balance_usd = newBalance * solPrice
  */
 export async function updateWalletBalance(
   walletId: string,
   newBalance: number,
+  solPrice: number,
 ): Promise<Wallet> {
   try {
+    const balanceUsd = newBalance * solPrice;
+
     const { data, error } = await (supabaseAdmin
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from("wallets") as any)
       .update({
         balance_sol: newBalance,
-        balance_usd: 0, // TODO: Convert SOL to USD using price service
+        balance_usd: balanceUsd,
         updated_at: new Date().toISOString(),
       })
       .eq("id", walletId)

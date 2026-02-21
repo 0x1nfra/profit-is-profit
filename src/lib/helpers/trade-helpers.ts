@@ -342,9 +342,9 @@ export function extractUniqueTokenMints(
  * @returns Filtered array of transactions
  */
 export function getTransactionsByTokenMint(
-  transactions: HeliusTransaction[],
+  transactions: (HeliusTransaction | EnhancedTransaction)[],
   tokenMint: string,
-): HeliusTransaction[] {
+): (HeliusTransaction | EnhancedTransaction)[] {
   return transactions.filter((tx) => {
     if (!tx.tokenTransfers) return false;
     return tx.tokenTransfers.some((transfer) => transfer.mint === tokenMint);
@@ -358,23 +358,23 @@ export function getTransactionsByTokenMint(
 /**
  * Sorts transactions by timestamp (oldest first)
  *
- * @param transactions - Array of Helius transactions
+ * @param transactions - Array of Helius or Enhanced transactions
  * @returns Sorted array
  */
 export function sortTransactionsByTime(
-  transactions: HeliusTransaction[],
-): HeliusTransaction[] {
+  transactions: (HeliusTransaction | EnhancedTransaction)[],
+): (HeliusTransaction | EnhancedTransaction)[] {
   return [...transactions].sort((a, b) => a.timestamp - b.timestamp);
 }
 
 /**
  * Gets the first transaction timestamp
  *
- * @param transactions - Array of Helius transactions
+ * @param transactions - Array of Helius or Enhanced transactions
  * @returns Date of first transaction, or undefined if empty
  */
 export function getFirstTransactionTime(
-  transactions: HeliusTransaction[],
+  transactions: (HeliusTransaction | EnhancedTransaction)[],
 ): Date | undefined {
   if (transactions.length === 0) return undefined;
 
@@ -385,11 +385,11 @@ export function getFirstTransactionTime(
 /**
  * Gets the last transaction timestamp
  *
- * @param transactions - Array of Helius transactions
+ * @param transactions - Array of Helius or Enhanced transactions
  * @returns Date of last transaction, or undefined if empty
  */
 export function getLastTransactionTime(
-  transactions: HeliusTransaction[],
+  transactions: (HeliusTransaction | EnhancedTransaction)[],
 ): Date | undefined {
   if (transactions.length === 0) return undefined;
 

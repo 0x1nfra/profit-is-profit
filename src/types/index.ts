@@ -69,6 +69,9 @@ export interface Trade {
   total_exit_sol: number;
   net_profit_sol: number;
   roi_percent: number;
+  total_fees_sol: number;
+  net_profit_usd?: number;
+  roi_multiplier?: number;
 
   // Tier & streak at trade time
   tier_at_trade: Tier;
@@ -251,7 +254,7 @@ export interface TokenTransfer {
   toTokenAccount: string;
   tokenAmount: number;
   mint: string;
-  tokenStandard: string;
+  tokenStandard?: string;
 }
 
 export interface NativeTransfer {
@@ -358,6 +361,10 @@ export interface TradeRefreshResponse {
     trading: number;
     vault: number;
   };
+  closedTradesCount: number;
+  totalProfitSol: number;
+  totalProfitUsd: number;
+  solPrice: number;
 }
 
 export interface SyncResult {
@@ -368,6 +375,10 @@ export interface SyncResult {
     vault: number;
   };
   lastSyncTimestamp: string;
+  closedTradesCount: number;
+  totalProfitSol: number;
+  totalProfitUsd: number;
+  solPrice: number;
 }
 
 // Cashout Confirmation
