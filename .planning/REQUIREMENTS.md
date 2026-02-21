@@ -38,7 +38,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **TRADE-04**: System calculates net profit (total exit SOL - total entry SOL) per closed trade
 - [x] **TRADE-05**: System calculates ROI percentage per trade
 - [x] **TRADE-06**: System handles dust amounts (< 0.000001 tokens treated as 0)
-- [ ] **TRADE-07**: System processes multiple token closures in a single refresh
+- [x] **TRADE-07**: System processes multiple token closures in a single refresh
 
 ### Cashout System
 
@@ -128,7 +128,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | TRADE-04 | Phase 2 | Complete |
 | TRADE-05 | Phase 2 | Complete |
 | TRADE-06 | Phase 2 | Complete |
-| TRADE-07 | Phase 2 | Pending |
+| TRADE-07 | Phase 2 | Complete |
 | DASH-01 | Phase 3 | Pending |
 | DASH-02 | Phase 3 | Pending |
 | DASH-03 | Phase 3 | Pending |

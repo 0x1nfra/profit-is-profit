@@ -13,7 +13,7 @@ This roadmap transforms existing backend business logic (tier calculator, cashou
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Authentication** - User connects wallet, sets up trading + vault wallets, database ready
-- [ ] **Phase 2: Trade Detection & Sync** - System detects closed trades from Helius and calculates profit/loss
+- [x] **Phase 2: Trade Detection & Sync** - System detects closed trades from Helius and calculates profit/loss
 - [ ] **Phase 3: Dashboard & Cashout Flow** - User sees wallet health, gets cashout recommendations, confirms cashouts
 - [ ] **Phase 4: Goal Tracking** - User sets monthly goals, tracks vault deposit progress
 - [ ] **Phase 5: Trade History & UI Polish** - User browses historical trades, responsive design, error states
@@ -51,7 +51,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Enhanced API client refactor + trade parser with position boundary detection (TDD)
-- [ ] 02-02-PLAN.md — Price service, trade-service orchestration, API route, dashboard sync UI
+- [x] 02-02-PLAN.md — Price service, trade-service orchestration, API route, dashboard sync UI
 
 ### Phase 3: Dashboard & Cashout Flow
 **Goal**: Users see wallet health tier, recent trades with recommendations, and can confirm manual cashouts

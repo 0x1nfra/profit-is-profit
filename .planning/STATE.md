@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 2 of 5 (Trade Detection & Sync)
-Plan: 1 of 2 in current phase
+Plan: 2 of 2 in current phase
 Status: Complete
-Last activity: 2026-02-20 — Completed Plan 01: Enhanced API client and position boundary detection
+Last activity: 2026-02-22 — Completed Plan 02: Trade sync orchestration and dashboard integration
 
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 9 min
-- Total execution time: 0.45 hours
+- Total plans completed: 4
+- Average duration: 9.5 min
+- Total execution time: 0.63 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 2 | 18 min | 9 min |
-| 02-trade-detection-sync | 1 | 9 min | 9 min |
+| 02-trade-detection-sync | 2 | 19 min | 9.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 9min, 9min, 9min
+- Last 5 plans: 10min, 9min, 9min, 9min
 - Trend: Consistent velocity
 
 *Updated after each plan completion*
@@ -59,6 +59,11 @@ Recent decisions affecting current work:
 - wSOL filtering at extraction level — Prevents false trades from wrapped SOL operations (02-01)
 - Union type for backward compatibility — Support both HeliusTransaction and EnhancedTransaction during migration (02-01)
 - Cursor-based pagination with rate limiting — 200ms delays prevent rate limit issues while backfilling (02-01)
+- CoinGecko for SOL/USD price — 60s cache with $150 fallback, no auth required (02-02)
+- Backfill vs incremental sync — First sync backfills 500 txs, subsequent syncs use last_synced_at (02-02)
+- Only save closed trades — Open positions (non-zero token balance) excluded from database (02-02)
+- Dashboard auto-sync on load — Triggers after balances fetch for fresh data (02-02)
+- Toast notifications for all sync results — Success/info/error with retry action (02-02)
 
 ### Pending Todos
 
@@ -73,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Completed 02-01-PLAN.md
-Resume file: .planning/phases/02-trade-detection-sync/02-02-PLAN.md
+Last session: 2026-02-22
+Stopped at: Completed 02-02-PLAN.md (Phase 2 complete)
+Resume file: .planning/phases/03-cashout-recommendation/03-01-PLAN.md
