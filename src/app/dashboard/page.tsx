@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, RefreshCw, Loader2 } from 'lucide-react';
 import { useWalletStore } from '@/lib/stores/wallet-store';
 import { signOut } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +32,65 @@ export default function DashboardPage() {
   const [balances, setBalances] = useState<Map<string, WalletBalance>>(new Map());
   const [isLoadingWallets, setIsLoadingWallets] = useState(true);
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync trades from Helius
+  const handleSync = async () => {
+    const tradingWallet = wallets.find(w => w.wallet_type === 'trading');
+    if (!tradingWallet || isSyncing) return;
+
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/trades/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: tradingWallet.address }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Sync failed');
+      }
+
+      // Toast notification per user decision
+      if (result.closedTradesCount > 0) {
+        const profitSign = result.totalProfitSol >= 0 ? '+' : '';
+        toast.success(
+          `Found ${result.closedTradesCount} new closed trade${result.closedTradesCount > 1 ? 's' : ''} (${profitSign}${result.totalProfitSol.toFixed(4)} SOL)`
+        );
+      } else {
+        toast.info('No new closed trades found');
+      }
+
+      // Refresh balances after sync
+      const addresses = wallets.map(w => w.address).join(',');
+      const balanceResponse = await fetch(`/api/wallets/balances?addresses=${addresses}`);
+      const balanceResult = await balanceResponse.json();
+
+      if (balanceResponse.ok && balanceResult.success) {
+        const balanceMap = new Map<string, WalletBalance>();
+        balanceResult.balances.forEach((balance: WalletBalance) => {
+          balanceMap.set(balance.address, balance);
+        });
+        setBalances(balanceMap);
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to sync trades',
+        {
+          action: {
+            label: 'Retry',
+            onClick: () => handleSync(),
+          },
+        }
+      );
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Fetch user wallets via API
   useEffect(() => {
@@ -110,6 +168,15 @@ export default function DashboardPage() {
     fetchBalances();
   }, [wallets]);
 
+  // Auto-sync trades when balances are loaded
+  useEffect(() => {
+    const tradingWallet = wallets.find(w => w.wallet_type === 'trading');
+    if (tradingWallet && !isLoadingBalances && !isSyncing && balances.size > 0) {
+      handleSync();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wallets, isLoadingBalances]);
+
   const handleDisconnect = async () => {
     try {
       // Call signout API to clear cookies
@@ -173,6 +240,24 @@ export default function DashboardPage() {
             <p className="mt-1 text-zinc-400">Your wallet balances and profit tracking</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSync}
+              disabled={isSyncing}
+              variant="outline"
+              className="border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            >
+              {isSyncing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Refresh Trades
+                </>
+              )}
+            </Button>
             <Button
               variant="outline"
               size="icon"

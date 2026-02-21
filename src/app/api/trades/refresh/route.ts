@@ -108,6 +108,10 @@ export async function POST(
       success: true,
       newTrades: result.newTrades,
       updatedBalances: result.updatedBalances,
+      closedTradesCount: result.closedTradesCount,
+      totalProfitSol: result.totalProfitSol,
+      totalProfitUsd: result.totalProfitUsd,
+      solPrice: result.solPrice,
     };
 
     return NextResponse.json(response, { status: 200 });
