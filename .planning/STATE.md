@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 2.1 of 5 (Convex Migration)
-Plan: 2 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-22 — Completed Plan 02: Convex data access layer (wallets, trades, userState, goalSettings functions)
+Last activity: 2026-02-22 — Completed Plan 03: Auth-to-Convex bridge (RS256 JWT, ConvexClientProvider, middleware simplification)
 
-Progress: [████░░░░░░] 40%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 17.8 min
-- Total execution time: 1.68 hours
+- Total plans completed: 7
+- Average duration: 15.4 min
+- Total execution time: 1.78 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [████░░░░░░] 40%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 2 | 18 min | 9 min |
 | 02-trade-detection-sync | 2 | 19 min | 9.5 min |
-| 02.1-convex-migration | 2 | 70 min | 35 min |
+| 02.1-convex-migration | 3 | 76 min | 25.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 2min, 68min, 10min, 9min, 9min
-- Trend: Plan 02 fast (pure file writing, no external CLI auth)
+- Last 5 plans: 6min, 2min, 68min, 10min, 9min
+- Trend: Plan 03 fast (pure file changes, no external CLI auth)
 
 *Updated after each plan completion*
 
@@ -72,6 +72,10 @@ Recent decisions affecting current work:
 - updateWalletBalance as internalMutation — balance updates only happen server-side from sync action (02.1-02)
 - saveSyncedTrades idempotency via by_user_token index + positionClosedAt filter — same trade never inserted twice (02.1-02)
 - getUserTrades capped at 50 by default with optional limit arg — prevents unbounded reads (02.1-02)
+- pisp-auth (httpOnly) and pisp-convex-token (non-httpOnly) set simultaneously — both contain same JWT; httpOnly for middleware, non-httpOnly for ConvexProviderWithAuth (02.1-03)
+- Wallet public key as JWT sub claim — no database user record needed; wallet address IS the identity (02.1-03)
+- Setup detection moved fully client-side via useQuery(wallets) — middleware no longer checks pisp-setup-complete (02.1-03)
+- 410 stubs left on disk to surface explicit errors to any caller still using old routes (02.1-03)
 
 ### Roadmap Evolution
 
@@ -91,5 +95,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 02.1-02-PLAN.md (Convex data access layer)
-Resume file: .planning/phases/02.1-convex-migration/02.1-03-PLAN.md
+Stopped at: Completed 02.1-03-PLAN.md (Auth-to-Convex bridge)
+Resume file: .planning/phases/02.1-convex-migration/02.1-04-PLAN.md

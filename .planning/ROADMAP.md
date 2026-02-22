@@ -57,12 +57,12 @@ Plans:
 
 **Goal:** Replace Supabase with Convex for data layer, auth, and real-time. Full end-to-end flow works after migration: connect wallet → setup wallets → sync trades → view dashboard. Type safety via Convex generated types; real-time reactive updates for wallet balances and trades; full Supabase removal.
 **Depends on:** Phase 2
-**Plans:** 2/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
-- [ ] 02.1-01-PLAN.md — Install Convex + jose, initialize project, define schema (4 tables), configure customJwt auth + JWKS endpoint
-- [ ] 02.1-02-PLAN.md — Write Convex functions: wallets, trades, userState, goalSettings queries/mutations
-- [ ] 02.1-03-PLAN.md — Update auth/verify to issue RS256 JWT, create ConvexClientProvider, wire into layout, stub dead API routes
+- [x] 02.1-01-PLAN.md — Install Convex + jose, initialize project, define schema (4 tables), configure customJwt auth + JWKS endpoint
+- [x] 02.1-02-PLAN.md — Write Convex functions: wallets, trades, userState, goalSettings queries/mutations
+- [x] 02.1-03-PLAN.md — Update auth/verify to issue RS256 JWT, create ConvexClientProvider, wire into layout, stub dead API routes
 - [ ] 02.1-04-PLAN.md — Convex sync action (replaces /api/trades/refresh), rewrite dashboard with useQuery/useMutation
 - [ ] 02.1-05-PLAN.md — Supabase removal (uninstall, delete files, clean env vars), end-to-end verification
 
@@ -123,7 +123,7 @@ Phases execute in numeric order: 1 → 2 → 2.1 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 2/2 | Complete | 2026-02-20 |
 | 2. Trade Detection & Sync | 0/2 | Complete    | 2026-02-21 |
-| 2.1 Convex Migration (INSERTED) | 0/5 | Not started | - |
+| 2.1 Convex Migration (INSERTED) | 3/5 | In Progress | - |
 | 3. Dashboard & Cashout Flow | 0/TBD | Not started | - |
 | 4. Goal Tracking | 0/TBD | Not started | - |
 | 5. Trade History & UI Polish | 0/TBD | Not started | - |
