@@ -65,6 +65,10 @@ Recent decisions affecting current work:
 - Dashboard auto-sync on load — Triggers after balances fetch for fresh data (02-02)
 - Toast notifications for all sync results — Success/info/error with retry action (02-02)
 
+### Roadmap Evolution
+
+- Phase 2.1 inserted after Phase 2: Convex Migration (URGENT) — database.ts types out of sync with actual schema usage, forcing `as any` casts throughout trade-service.ts; migration to Convex unblocks Phase 2 UAT and eliminates schema drift permanently
+
 ### Pending Todos
 
 None yet.
