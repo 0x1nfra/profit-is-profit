@@ -4,56 +4,58 @@
 // =============================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
-import type { AuthVerifyRequest, AuthVerifyResponse } from '@/types/wallet';
-import type { Database } from '@/types/database';
+import { SignJWT, importPKCS8 } from 'jose';
 import nacl from 'tweetnacl';
 import bs58 from 'bs58';
-import type { SupabaseClient } from '@supabase/supabase-js';
+
+interface AuthVerifyRequest {
+  publicKey: string;
+  message: number[];
+  signature: string;
+}
+
+interface AuthVerifyResponse {
+  success: boolean;
+  error?: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse request body
     const body: AuthVerifyRequest = await request.json();
     const { publicKey, message, signature } = body;
 
     // Validate required fields
     if (!publicKey || !message || !signature) {
-      const response: AuthVerifyResponse = {
-        success: false,
-        error: 'Missing required fields: publicKey, message, and signature are required',
-      };
-      return NextResponse.json(response, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' } as AuthVerifyResponse,
+        { status: 400 }
+      );
     }
 
     // Decode public key from base58
     let publicKeyBytes: Uint8Array;
     try {
       publicKeyBytes = bs58.decode(publicKey);
-    } catch (error) {
-      const response: AuthVerifyResponse = {
-        success: false,
-        error: 'Invalid public key format',
-      };
-      return NextResponse.json(response, { status: 400 });
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Invalid public key format' } as AuthVerifyResponse,
+        { status: 400 }
+      );
     }
 
     // Decode signature from base58
     let signatureBytes: Uint8Array;
     try {
       signatureBytes = bs58.decode(signature);
-    } catch (error) {
-      const response: AuthVerifyResponse = {
-        success: false,
-        error: 'Invalid signature format',
-      };
-      return NextResponse.json(response, { status: 400 });
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Invalid signature format' } as AuthVerifyResponse,
+        { status: 400 }
+      );
     }
 
-    // Convert message array to Uint8Array
+    // Verify wallet signature (nacl Ed25519)
     const messageBytes = new Uint8Array(message);
-
-    // Verify the signature
     const isValid = nacl.sign.detached.verify(
       messageBytes,
       signatureBytes,
@@ -61,93 +63,56 @@ export async function POST(request: NextRequest) {
     );
 
     if (!isValid) {
-      const response: AuthVerifyResponse = {
-        success: false,
-        error: 'Invalid signature',
-      };
-      return NextResponse.json(response, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: 'Invalid signature' } as AuthVerifyResponse,
+        { status: 401 }
+      );
     }
 
-    // Signature is valid - find or create user
-    // Type assertion needed because supabaseAdmin has conditional typing
-    const admin = supabaseAdmin as SupabaseClient<Database>;
+    // Sign a Convex JWT — wallet public key is the user identity
+    const privateKeyPem = JSON.parse(process.env.JWT_PRIVATE_KEY!);
+    const privateKey = await importPKCS8(privateKeyPem, 'RS256');
+    const siteUrl = process.env.CONVEX_SITE_URL!;
 
-    // First, check if a wallet with this address exists
-    const walletQuery = await admin
-      .from('wallets')
-      .select('user_id')
-      .eq('address', publicKey)
-      .limit(1);
+    const convexToken = await new SignJWT({ sub: publicKey })
+      .setProtectedHeader({ alg: 'RS256', kid: 'pisp-key-1' })
+      .setIssuedAt()
+      .setIssuer(siteUrl)
+      .setAudience('profit-is-profit')
+      .setExpirationTime('7d')
+      .sign(privateKey);
 
-    const existingWallets = walletQuery.data as Array<{ user_id: string }> | null;
-    const walletError = walletQuery.error;
-
-    if (walletError) {
-      console.error('Error checking wallet:', walletError);
-      const response: AuthVerifyResponse = {
-        success: false,
-        error: 'Database error',
-      };
-      return NextResponse.json(response, { status: 500 });
-    }
-
-    let userId: string;
-
-    if (existingWallets && existingWallets.length > 0) {
-      // User already exists with this wallet
-      userId = existingWallets[0].user_id;
-    } else {
-      // Create new user
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const userQuery = await (admin as any)
-        .from('users')
-        .insert({
-          email: null,
-          username: null,
-        })
-        .select('id')
-        .single();
-
-      const newUser = userQuery.data as { id: string } | null;
-      const userError = userQuery.error;
-
-      if (userError || !newUser) {
-        console.error('Error creating user:', userError);
-        const response: AuthVerifyResponse = {
-          success: false,
-          error: 'Failed to create user',
-        };
-        return NextResponse.json(response, { status: 500 });
-      }
-
-      userId = newUser.id;
-    }
-
-    // Return success with user ID
-    const response: AuthVerifyResponse = {
-      success: true,
-      userId,
+    // Cookie settings
+    const cookieOptions = {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      path: '/',
     };
 
-    // Set auth cookie for middleware (7 days expiry to match session TTL)
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
-    const nextResponse = NextResponse.json(response, { status: 200 });
+    const response = NextResponse.json(
+      { success: true } as AuthVerifyResponse,
+      { status: 200 }
+    );
 
-    nextResponse.cookies.set('pisp-auth', publicKey, {
+    // pisp-auth: httpOnly — middleware reads this to check auth state
+    response.cookies.set('pisp-auth', convexToken, {
+      ...cookieOptions,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: sevenDays / 1000, // maxAge is in seconds
-      path: '/',
     });
 
-    return nextResponse;
+    // pisp-convex-token: NOT httpOnly — ConvexProviderWithAuth reads this client-side
+    response.cookies.set('pisp-convex-token', convexToken, {
+      ...cookieOptions,
+      httpOnly: false,
+    });
+
+    return response;
   } catch (error) {
     console.error('Auth verify error:', error);
-    const response: AuthVerifyResponse = {
-      success: false,
-      error: 'Internal server error',
-    };
-    return NextResponse.json(response, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' } as AuthVerifyResponse,
+      { status: 500 }
+    );
   }
 }
