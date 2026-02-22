@@ -12,6 +12,7 @@ export async function POST() {
     // Clear auth cookies
     response.cookies.delete('pisp-auth');
     response.cookies.delete('pisp-setup-complete');
+    response.cookies.delete('pisp-convex-token');
 
     return response;
   } catch (error) {
