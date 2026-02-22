@@ -6,33 +6,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Middleware for route protection based on authentication and setup status
+ * Middleware for route protection based on authentication state.
  *
  * Rules:
- * - Landing page `/`: If authenticated + setup complete → redirect to /dashboard
+ * - Landing page `/`: If authenticated → redirect to /dashboard
  * - Setup page `/setup`: If NOT authenticated → redirect to /
- * - Dashboard `/dashboard`: If NOT authenticated → redirect to /, if authenticated but NO setup → redirect to /setup
+ * - Dashboard `/dashboard`: If NOT authenticated → redirect to /
+ * - Setup detection is handled client-side: dashboard useQuery(wallets) redirects
+ *   to /setup when wallets array is empty.
  * - API routes: Pass through (handle their own auth)
  *
  * Auth Detection:
- * - Check for `pisp-auth` cookie (set by /api/auth/verify after signature verification)
- * - Check for `pisp-setup-complete` cookie (set by /api/wallets/create after setup)
+ * - Check for `pisp-auth` cookie (httpOnly, set by /api/auth/verify after signature verification)
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Get auth state from cookies
   const authCookie = request.cookies.get('pisp-auth');
-  const setupCookie = request.cookies.get('pisp-setup-complete');
-
   const isAuthenticated = !!authCookie?.value;
-  const isSetupComplete = setupCookie?.value === 'true';
 
   // Route protection logic
   switch (pathname) {
     case '/':
-      // Landing page: If authenticated + setup complete → go to dashboard
-      if (isAuthenticated && isSetupComplete) {
+      // Landing page: If authenticated → go to dashboard
+      // (Dashboard handles setup redirect if wallets are empty)
+      if (isAuthenticated) {
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
       break;
@@ -49,10 +48,7 @@ export async function middleware(request: NextRequest) {
       if (!isAuthenticated) {
         return NextResponse.redirect(new URL('/', request.url));
       }
-      // Dashboard: If authenticated but NO setup → go to setup
-      if (isAuthenticated && !isSetupComplete) {
-        return NextResponse.redirect(new URL('/setup', request.url));
-      }
+      // Setup detection is client-side — no cookie check here
       break;
 
     default:
