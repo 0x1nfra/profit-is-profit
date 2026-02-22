@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 2.1 of 5 (Convex Migration)
-Plan: 1 of 5 in current phase
+Plan: 2 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-22 — Completed Plan 01: Convex foundation (schema, auth config, JWKS endpoint, RSA keys)
+Last activity: 2026-02-22 — Completed Plan 02: Convex data access layer (wallets, trades, userState, goalSettings functions)
 
 Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 19.6 min
-- Total execution time: 1.65 hours
+- Total plans completed: 6
+- Average duration: 17.8 min
+- Total execution time: 1.68 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [████░░░░░░] 40%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 2 | 18 min | 9 min |
 | 02-trade-detection-sync | 2 | 19 min | 9.5 min |
-| 02.1-convex-migration | 1 | 68 min | 68 min |
+| 02.1-convex-migration | 2 | 70 min | 35 min |
 
 **Recent Trend:**
-- Last 5 plans: 68min, 10min, 9min, 9min, 9min
-- Trend: First Convex plan longer (interactive CLI auth + schema design)
+- Last 5 plans: 2min, 68min, 10min, 9min, 9min
+- Trend: Plan 02 fast (pure file writing, no external CLI auth)
 
 *Updated after each plan completion*
 
@@ -68,6 +68,10 @@ Recent decisions affecting current work:
 - jose@6 requires { extractable: true } for generateKeyPair — WebCrypto defaults to non-extractable (02.1-01)
 - camelCase schema fields eliminate as any casts from snake_case mismatch permanently (02.1-01)
 - Separate CONVEX_SITE_URL for server-side use alongside NEXT_PUBLIC_CONVEX_SITE_URL (02.1-01)
+- saveSyncedTrades as internalMutation — not callable from client, only from sync action in Plan 04 (02.1-02)
+- updateWalletBalance as internalMutation — balance updates only happen server-side from sync action (02.1-02)
+- saveSyncedTrades idempotency via by_user_token index + positionClosedAt filter — same trade never inserted twice (02.1-02)
+- getUserTrades capped at 50 by default with optional limit arg — prevents unbounded reads (02.1-02)
 
 ### Roadmap Evolution
 
@@ -87,5 +91,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 02.1-01-PLAN.md (Convex foundation setup)
-Resume file: .planning/phases/02.1-convex-migration/02.1-02-PLAN.md
+Stopped at: Completed 02.1-02-PLAN.md (Convex data access layer)
+Resume file: .planning/phases/02.1-convex-migration/02.1-03-PLAN.md
