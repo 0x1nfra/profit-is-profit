@@ -57,7 +57,7 @@ Plans:
 
 **Goal:** Replace Supabase with Convex for data layer, auth, and real-time. Full end-to-end flow works after migration: connect wallet → setup wallets → sync trades → view dashboard. Type safety via Convex generated types; real-time reactive updates for wallet balances and trades; full Supabase removal.
 **Depends on:** Phase 2
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
 - [ ] 02.1-01-PLAN.md — Install Convex + jose, initialize project, define schema (4 tables), configure customJwt auth + JWKS endpoint

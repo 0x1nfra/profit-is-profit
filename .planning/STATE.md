@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Prevent traders from giving back profits by automatically calculating how much to take off the table after every winning trade, based on wallet health and trade performance.
-**Current focus:** Phase 2 - Trade Detection & Sync
+**Current focus:** Phase 2.1 - Convex Migration
 
 ## Current Position
 
-Phase: 2 of 5 (Trade Detection & Sync)
-Plan: 2 of 2 in current phase
-Status: Complete
-Last activity: 2026-02-22 — Completed Plan 02: Trade sync orchestration and dashboard integration
+Phase: 2.1 of 5 (Convex Migration)
+Plan: 1 of 5 in current phase
+Status: In Progress
+Last activity: 2026-02-22 — Completed Plan 01: Convex foundation (schema, auth config, JWKS endpoint, RSA keys)
 
 Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 9.5 min
-- Total execution time: 0.63 hours
+- Total plans completed: 5
+- Average duration: 19.6 min
+- Total execution time: 1.65 hours
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [████░░░░░░] 40%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 2 | 18 min | 9 min |
 | 02-trade-detection-sync | 2 | 19 min | 9.5 min |
+| 02.1-convex-migration | 1 | 68 min | 68 min |
 
 **Recent Trend:**
-- Last 5 plans: 10min, 9min, 9min, 9min
-- Trend: Consistent velocity
+- Last 5 plans: 68min, 10min, 9min, 9min, 9min
+- Trend: First Convex plan longer (interactive CLI auth + schema design)
 
 *Updated after each plan completion*
 
@@ -64,6 +65,9 @@ Recent decisions affecting current work:
 - Only save closed trades — Open positions (non-zero token balance) excluded from database (02-02)
 - Dashboard auto-sync on load — Triggers after balances fetch for fresh data (02-02)
 - Toast notifications for all sync results — Success/info/error with retry action (02-02)
+- jose@6 requires { extractable: true } for generateKeyPair — WebCrypto defaults to non-extractable (02.1-01)
+- camelCase schema fields eliminate as any casts from snake_case mismatch permanently (02.1-01)
+- Separate CONVEX_SITE_URL for server-side use alongside NEXT_PUBLIC_CONVEX_SITE_URL (02.1-01)
 
 ### Roadmap Evolution
 
@@ -83,5 +87,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 02-02-PLAN.md (Phase 2 complete)
-Resume file: .planning/phases/03-cashout-recommendation/03-01-PLAN.md
+Stopped at: Completed 02.1-01-PLAN.md (Convex foundation setup)
+Resume file: .planning/phases/02.1-convex-migration/02.1-02-PLAN.md
