@@ -8,7 +8,8 @@ import { isAddress } from '@solana/addresses';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Info } from 'lucide-react';
-import { useWalletStore } from '@/lib/stores/wallet-store';
+import { useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,14 +57,13 @@ interface WalletSetupFormProps {
 
 export function WalletSetupForm({ connectedAddress }: WalletSetupFormProps) {
   const router = useRouter();
-  const { setSetupComplete } = useWalletStore();
+  const createWallets = useMutation(api.wallets.createWallets);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
-    watch,
   } = useForm<WalletSetupFormData>({
     resolver: zodResolver(walletSetupSchema),
     mode: 'onChange',
@@ -78,27 +78,12 @@ export function WalletSetupForm({ connectedAddress }: WalletSetupFormProps) {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/wallets/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tradingWallet: data.tradingWallet,
-          vaultWallet: data.vaultWallet,
-        }),
+      await createWallets({
+        tradingWallet: data.tradingWallet,
+        vaultWallet: data.vaultWallet,
       });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to save wallets');
-      }
-
-      // Update store to mark setup as complete
-      setSetupComplete(true);
-
-      // Redirect to dashboard
+      // Redirect to dashboard — setup detection is now client-side via useQuery(wallets)
       router.push('/dashboard');
     } catch (error) {
       console.error('Wallet setup error:', error);

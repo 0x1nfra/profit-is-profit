@@ -6,7 +6,6 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useWalletStore } from '@/lib/stores/wallet-store';
-import { signOut } from '@/lib/supabase';
 import type { AuthVerifyRequest, AuthVerifyResponse } from '@/types/wallet';
 import bs58 from 'bs58';
 
@@ -156,7 +155,6 @@ export default function LandingPage() {
       await fetch('/api/auth/signout', { method: 'POST' });
 
       await disconnect();
-      await signOut();
       reset();
       toast.success('Wallet disconnected');
     } catch (error) {
