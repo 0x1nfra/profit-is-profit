@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Prevent traders from giving back profits by automatically calculating how much to take off the table after every winning trade, based on wallet health and trade performance.
-**Current focus:** Phase 2.1 - Convex Migration
+**Current focus:** Phase 2.1 - Convex Migration (COMPLETE pending human verification)
 
 ## Current Position
 
 Phase: 2.1 of 5 (Convex Migration)
-Plan: 5 of 5 in current phase
-Status: In Progress
-Last activity: 2026-02-23 — Completed Plan 04: Sync action + reactive dashboard (convex/sync.ts, dashboard Convex hooks, WalletSetupForm migration)
+Plan: 5 of 5 in current phase — CHECKPOINT (human-verify)
+Status: Awaiting checkpoint verification — Task 2 of 02.1-05: end-to-end flow on Convex
+Last activity: 2026-02-23 — Completed Plan 05 Task 1: Supabase removal complete (packages, files, env vars, 410 stub). Awaiting human verification of full flow.
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -29,11 +29,11 @@ Progress: [████████░░] 80%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 2 | 18 min | 9 min |
 | 02-trade-detection-sync | 2 | 19 min | 9.5 min |
-| 02.1-convex-migration | 4 | 111 min | 27.8 min |
+| 02.1-convex-migration | 5 | 117 min | 23.4 min |
 
 **Recent Trend:**
-- Last 5 plans: 2min, 68min, 10min, 9min, 35min
-- Trend: Plan 04 moderate (Convex action + dashboard rewrite, TypeScript circular inference fixes)
+- Last 5 plans: 2min, 68min, 10min, 9min, 6min
+- Trend: Plan 05 fast (Supabase cleanup — deletion + env cleanup, no new code)
 
 *Updated after each plan completion*
 
@@ -53,14 +53,18 @@ Recent decisions affecting current work:
 - Timestamp-based verification messages — Simpler than UUID or backend nonce storage (01-01)
 - 7-day session TTL stored client-side — Standard web app session length (01-01)
 - Cookie-based auth for middleware — Simpler than Supabase SSR, set cookies on auth/setup (01-02)
-- CoinGecko for SOL/USD price — Public API with 60s cache, fallback to $150 (01-02)
+- CoinGecko for SOL/USD price — Public API with 60s cache, fallback to ### Decisions
+
+50 (01-02)
 - Checkbox confirmation for trading wallet — Explicit user acknowledgment of pre-filled address (01-02)
 - Info tooltip on vault wallet — Inline education on vault concept (01-02)
 - Enhanced API events.swap as primary SOL source — Avoids double-counting from nativeTransfers (02-01)
 - wSOL filtering at extraction level — Prevents false trades from wrapped SOL operations (02-01)
 - Union type for backward compatibility — Support both HeliusTransaction and EnhancedTransaction during migration (02-01)
 - Cursor-based pagination with rate limiting — 200ms delays prevent rate limit issues while backfilling (02-01)
-- CoinGecko for SOL/USD price — 60s cache with $150 fallback, no auth required (02-02)
+- CoinGecko for SOL/USD price — 60s cache with ### Decisions
+
+50 fallback, no auth required (02-02)
 - Backfill vs incremental sync — First sync backfills 500 txs, subsequent syncs use last_synced_at (02-02)
 - Only save closed trades — Open positions (non-zero token balance) excluded from database (02-02)
 - Dashboard auto-sync on load — Triggers after balances fetch for fresh data (02-02)
@@ -79,6 +83,8 @@ Recent decisions affecting current work:
 - useAction (not useMutation) for Convex actions from React client — type system enforces this distinction (02.1-04)
 - Explicit type annotations required in Convex "use node" actions to break circular _generated type inference (02.1-04)
 - Dashboard auto-sync on load removed — replaced with manual user-triggered sync button (per user decision 02.1-04)
+- [Phase 02.1-convex-migration]: trade-service.ts replaced with deprecation stub (export {}) rather than deleted — keeps git history traceable, avoids phantom import errors
+- [Phase 02.1-convex-migration]: pnpm used (not npm) for package management — project uses pnpm-lock.yaml; npm fails with arborist null error on pnpm symlinks
 
 ### Roadmap Evolution
 
@@ -98,5 +104,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 02.1-04-PLAN.md (Sync action + reactive dashboard)
-Resume file: .planning/phases/02.1-convex-migration/02.1-05-PLAN.md
+Stopped at: Checkpoint 02.1-05 Task 2 — human must verify end-to-end flow (connect wallet → setup → sync → dashboard) on Convex
+Resume file: .planning/phases/02.1-convex-migration/02.1-05-PLAN.md (Task 2 continuation after human approval)
