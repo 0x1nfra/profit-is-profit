@@ -38,11 +38,19 @@ function useConvexAuth() {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Read token from cookie on mount and when cookies change
+  // Read token from cookie on mount, and re-read whenever auth state changes.
+  // pisp-auth-change is dispatched by the landing page after sign-in/sign-out
+  // because this provider mounts once (in root layout) and its initial useEffect
+  // runs before the cookie is set by /api/auth/verify.
   useEffect(() => {
-    const cookieToken = getConvexTokenFromCookie();
-    setToken(cookieToken);
-    setIsLoading(false);
+    const syncToken = () => {
+      setToken(getConvexTokenFromCookie());
+      setIsLoading(false);
+    };
+
+    syncToken(); // initial read on mount
+    window.addEventListener("pisp-auth-change", syncToken);
+    return () => window.removeEventListener("pisp-auth-change", syncToken);
   }, []);
 
   const fetchAccessToken = useCallback(

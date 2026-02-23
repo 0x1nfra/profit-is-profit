@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useWalletStore } from "@/lib/stores/wallet-store";
 import { Settings, LogOut, RefreshCw, Loader2 } from "lucide-react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 export default function DashboardPage() {
   const router = useRouter();
   const { disconnect } = useWallet();
+  const { reset } = useWalletStore();
   const [isSyncing, setIsSyncing] = useState(false);
 
   // Convex reactive queries — auto-update when DB changes
@@ -25,16 +27,22 @@ export default function DashboardPage() {
   const vaultWallet = wallets?.find((w) => w.walletType === "vault");
 
   // Handle not authenticated (wallets query returns null when not authed)
-  if (wallets === null) {
-    router.push("/");
-    return null;
-  }
+  // Must sign out first to clear pisp-auth cookie, otherwise middleware
+  // redirects back to /dashboard and we loop indefinitely.
+  useEffect(() => {
+    if (wallets === null) {
+      fetch("/api/auth/signout", { method: "POST" }).finally(() => {
+        router.push("/");
+      });
+    }
+  }, [wallets, router]);
 
   // Handle setup not complete (wallets array is empty)
-  if (!isLoading && wallets !== null && wallets.length === 0) {
-    router.push("/setup");
-    return null;
-  }
+  useEffect(() => {
+    if (!isLoading && wallets !== null && wallets !== undefined && wallets.length === 0) {
+      router.push("/setup");
+    }
+  }, [wallets, isLoading, router]);
 
   const handleSync = async () => {
     if (!tradingWallet || isSyncing) return;
@@ -65,6 +73,8 @@ export default function DashboardPage() {
   const handleDisconnect = async () => {
     try {
       await fetch("/api/auth/signout", { method: "POST" });
+      window.dispatchEvent(new CustomEvent("pisp-auth-change"));
+      reset();
       await disconnect();
       router.push("/");
       toast.success("Wallet disconnected");
@@ -77,7 +87,7 @@ export default function DashboardPage() {
   const truncateAddress = (address: string) =>
     `${address.slice(0, 4)}...${address.slice(-4)}`;
 
-  if (isLoading) {
+  if (isLoading || wallets === null || wallets.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black">
         <div className="text-zinc-400">Loading dashboard...</div>

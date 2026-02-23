@@ -12,7 +12,7 @@ import bs58 from 'bs58';
 export default function LandingPage() {
   const router = useRouter();
   const { publicKey, signMessage, disconnect } = useWallet();
-  const { connectedAddress, isSetupComplete, setConnected, reset, isSessionValid } = useWalletStore();
+  const { connectedAddress, setConnected, reset, isSessionValid } = useWalletStore();
 
   const [isVerifying, setIsVerifying] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
@@ -42,12 +42,8 @@ export default function LandingPage() {
           const truncated = `${currentAddress.slice(0, 4)}...${currentAddress.slice(-4)}`;
           toast.success(`Reconnected as ${truncated}`);
 
-          // Redirect based on setup status
-          if (isSetupComplete) {
-            router.push('/dashboard');
-          } else {
-            router.push('/setup');
-          }
+          // Always go to dashboard — it redirects to /setup if wallets aren't configured
+          router.push('/dashboard');
         } else {
           // Session expired
           toast.warning('Session expired, please reconnect');
@@ -60,7 +56,7 @@ export default function LandingPage() {
     };
 
     checkAutoReconnect();
-  }, [publicKey, connectedAddress, disconnect, reset, isSessionValid, isSetupComplete, router]);
+  }, [publicKey, connectedAddress, disconnect, reset, isSessionValid, router]);
 
   // Wallet connection handler
   useEffect(() => {
@@ -121,8 +117,12 @@ export default function LandingPage() {
         // Success - update store
         setConnected(publicKeyBase58);
 
-        // Redirect to setup (routing logic for dashboard is in Plan 02)
-        router.push('/setup');
+        // Notify ConvexClientProvider to re-read the cookie (it mounts once in
+        // root layout before this cookie exists, so it needs an explicit signal).
+        window.dispatchEvent(new CustomEvent("pisp-auth-change"));
+
+        // Go to dashboard — it redirects to /setup if wallets aren't configured yet
+        router.push('/dashboard');
       } catch (error) {
         console.error('Authentication error:', error);
 
@@ -153,6 +153,7 @@ export default function LandingPage() {
     try {
       // Call signout API to clear cookies
       await fetch('/api/auth/signout', { method: 'POST' });
+      window.dispatchEvent(new CustomEvent("pisp-auth-change"));
 
       await disconnect();
       reset();

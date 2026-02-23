@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Sign a Convex JWT — wallet public key is the user identity
-    const privateKeyPem = JSON.parse(process.env.JWT_PRIVATE_KEY!);
+    const privateKeyPem = process.env.JWT_PRIVATE_KEY!;
     const privateKey = await importPKCS8(privateKeyPem, 'RS256');
     const siteUrl = process.env.CONVEX_SITE_URL!;
 

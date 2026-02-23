@@ -6,10 +6,6 @@ import {
   WalletProvider as SolanaWalletProvider,
 } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
 
@@ -25,19 +21,12 @@ export default function WalletProvider({ children }: WalletProviderProps) {
   const network = WalletAdapterNetwork.Mainnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
-  // Configure wallets: Phantom, Solflare
-  // Note: Backpack not available in @solana/wallet-adapter-wallets package
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-    ],
-    []
-  );
-
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect={true}>
+      {/* Empty wallets array — v0.15+ auto-discovers via Wallet Standard.
+          Explicit adapters (Phantom, Solflare) caused duplicate keys because
+          those wallets also register themselves via the standard protocol. */}
+      <SolanaWalletProvider wallets={[]} autoConnect={true}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </SolanaWalletProvider>
     </ConnectionProvider>
