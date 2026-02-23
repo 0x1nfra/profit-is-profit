@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Prevent traders from giving back profits by automatically calculating how much to take off the table after every winning trade, based on wallet health and trade performance.
-**Current focus:** Phase 2.1 - Convex Migration (COMPLETE pending human verification)
+**Current focus:** Phase 2 - Trade Detection & Sync (UAT) — Phase 2.1 Convex Migration COMPLETE
 
 ## Current Position
 
-Phase: 2.1 of 5 (Convex Migration)
-Plan: 5 of 5 in current phase — CHECKPOINT (human-verify)
-Status: Awaiting checkpoint verification — Task 2 of 02.1-05: end-to-end flow on Convex
-Last activity: 2026-02-23 — Completed Plan 05 Task 1: Supabase removal complete (packages, files, env vars, 410 stub). Awaiting human verification of full flow.
+Phase: 2.1 of 5 (Convex Migration) — COMPLETE
+Plan: 5 of 5 — COMPLETE
+Status: Phase 2.1 complete. Ready for Phase 2 UAT or Phase 3 (Profit Calculation).
+Last activity: 2026-02-24 — Completed Plan 05 Task 2: E2E flow verified by human. Full Supabase removal + Convex migration done.
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100% (Phase 2.1)
 
 ## Performance Metrics
 
@@ -29,7 +29,7 @@ Progress: [█████████░] 90%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 2 | 18 min | 9 min |
 | 02-trade-detection-sync | 2 | 19 min | 9.5 min |
-| 02.1-convex-migration | 5 | 117 min | 23.4 min |
+| 02.1-convex-migration | 5 | ~138 min | 27.6 min |
 
 **Recent Trend:**
 - Last 5 plans: 2min, 68min, 10min, 9min, 6min
@@ -85,6 +85,10 @@ Recent decisions affecting current work:
 - Dashboard auto-sync on load removed — replaced with manual user-triggered sync button (per user decision 02.1-04)
 - [Phase 02.1-convex-migration]: trade-service.ts replaced with deprecation stub (export {}) rather than deleted — keeps git history traceable, avoids phantom import errors
 - [Phase 02.1-convex-migration]: pnpm used (not npm) for package management — project uses pnpm-lock.yaml; npm fails with arborist null error on pnpm symlinks
+- [02.1-05]: pisp-auth-change custom event required — ConvexClientProvider mounts once before sign-in cookie exists; event triggers re-read (simpler than shared state or polling)
+- [02.1-05]: Empty wallets=[] for SolanaWalletProvider — Wallet Standard auto-discovery; explicit Phantom/Solflare adapters caused duplicate wallet keys
+- [02.1-05]: JWT_PRIVATE_KEY is PEM string not JSON — removed erroneous JSON.parse that was breaking token generation in verify route
+- [02.1-05]: Always route to /dashboard after auth; dashboard uses useQuery(wallets) to determine if redirect to /setup needed — single routing responsibility
 
 ### Roadmap Evolution
 
@@ -103,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-23
-Stopped at: Checkpoint 02.1-05 Task 2 — human must verify end-to-end flow (connect wallet → setup → sync → dashboard) on Convex
-Resume file: .planning/phases/02.1-convex-migration/02.1-05-PLAN.md (Task 2 continuation after human approval)
+Last session: 2026-02-24
+Stopped at: Completed Phase 2.1 — 02.1-05-PLAN.md all tasks done, E2E flow verified by human
+Resume file: N/A — Phase 2.1 complete. Next: Phase 2 UAT or Phase 3 (Profit Calculation)
