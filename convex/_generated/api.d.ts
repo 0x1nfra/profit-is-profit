@@ -8,7 +8,12 @@
  * @module
  */
 
+import type * as goalSettings from "../goalSettings.js";
 import type * as http from "../http.js";
+import type * as sync from "../sync.js";
+import type * as trades from "../trades.js";
+import type * as userState from "../userState.js";
+import type * as wallets from "../wallets.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +22,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  goalSettings: typeof goalSettings;
   http: typeof http;
+  sync: typeof sync;
+  trades: typeof trades;
+  userState: typeof userState;
+  wallets: typeof wallets;
 }>;
 
 /**

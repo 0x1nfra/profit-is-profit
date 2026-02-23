@@ -1,5 +1,6 @@
 // convex/userState.ts
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalQuery } from "./_generated/server";
+import { v } from "convex/values";
 
 export const getUserState = query({
   args: {},
@@ -10,6 +11,16 @@ export const getUserState = query({
     return await ctx.db
       .query("userState")
       .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .first();
+  },
+});
+
+export const getUserStateInternal = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("userState")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
   },
 });

@@ -1,5 +1,5 @@
 // convex/wallets.ts
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getUserWallets = query({
@@ -95,6 +95,17 @@ export const createWallets = mutation({
         balanceUsd: 0,
       });
     }
+  },
+});
+
+export const getWalletByAddressInternal = internalQuery({
+  args: { address: v.string(), userId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("wallets")
+      .withIndex("by_address", (q) => q.eq("address", args.address))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .first();
   },
 });
 

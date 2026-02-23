@@ -1,5 +1,5 @@
 // convex/goalSettings.ts
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getGoalSettings = query({
@@ -11,6 +11,16 @@ export const getGoalSettings = query({
     return await ctx.db
       .query("goalSettings")
       .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .first();
+  },
+});
+
+export const getGoalSettingsInternal = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("goalSettings")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
   },
 });
