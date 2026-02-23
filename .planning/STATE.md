@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 2.1 of 5 (Convex Migration)
-Plan: 4 of 5 in current phase
+Plan: 5 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-22 — Completed Plan 03: Auth-to-Convex bridge (RS256 JWT, ConvexClientProvider, middleware simplification)
+Last activity: 2026-02-23 — Completed Plan 04: Sync action + reactive dashboard (convex/sync.ts, dashboard Convex hooks, WalletSetupForm migration)
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 15.4 min
-- Total execution time: 1.78 hours
+- Total plans completed: 8
+- Average duration: 16.7 min
+- Total execution time: 2.23 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [██████░░░░] 60%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 2 | 18 min | 9 min |
 | 02-trade-detection-sync | 2 | 19 min | 9.5 min |
-| 02.1-convex-migration | 3 | 76 min | 25.3 min |
+| 02.1-convex-migration | 4 | 111 min | 27.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 6min, 2min, 68min, 10min, 9min
-- Trend: Plan 03 fast (pure file changes, no external CLI auth)
+- Last 5 plans: 2min, 68min, 10min, 9min, 35min
+- Trend: Plan 04 moderate (Convex action + dashboard rewrite, TypeScript circular inference fixes)
 
 *Updated after each plan completion*
 
@@ -76,6 +76,9 @@ Recent decisions affecting current work:
 - Wallet public key as JWT sub claim — no database user record needed; wallet address IS the identity (02.1-03)
 - Setup detection moved fully client-side via useQuery(wallets) — middleware no longer checks pisp-setup-complete (02.1-03)
 - 410 stubs left on disk to surface explicit errors to any caller still using old routes (02.1-03)
+- useAction (not useMutation) for Convex actions from React client — type system enforces this distinction (02.1-04)
+- Explicit type annotations required in Convex "use node" actions to break circular _generated type inference (02.1-04)
+- Dashboard auto-sync on load removed — replaced with manual user-triggered sync button (per user decision 02.1-04)
 
 ### Roadmap Evolution
 
@@ -94,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-22
-Stopped at: Completed 02.1-03-PLAN.md (Auth-to-Convex bridge)
-Resume file: .planning/phases/02.1-convex-migration/02.1-04-PLAN.md
+Last session: 2026-02-23
+Stopped at: Completed 02.1-04-PLAN.md (Sync action + reactive dashboard)
+Resume file: .planning/phases/02.1-convex-migration/02.1-05-PLAN.md
