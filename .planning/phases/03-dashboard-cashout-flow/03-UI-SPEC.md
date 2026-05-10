@@ -46,7 +46,7 @@ Declared values (multiples of 4 only):
 | 3xl | 48px | Not used in this phase |
 
 Exceptions:
-- Touch targets for icon-only buttons (Settings, collapse chevron): minimum 44px hit area via `p-2.5` wrapper
+- Touch targets for icon-only buttons (Settings, collapse chevron): minimum 44px hit area via `p-3` wrapper (12px padding; 20px icon + 24px total padding = 44px)
 - Stats cards grid gap: `gap-6` (24px) — matches existing dashboard pattern
 - Page horizontal padding: `px-4` (16px) on mobile, auto margins on `max-w-4xl` container on desktop
 
@@ -205,7 +205,7 @@ All components already installed. No new shadcn installs required for this phase
 
 ### StatsRow — Tier Card Treatment
 
-The tier card spans the same width as each balance card in a 3-column grid (`md:grid-cols-3`). The tier is visually differentiated by having the tier badge as the primary visual element at the top, with the tier number displayed large (`text-4xl font-semibold`) and the tier color applying as a colored left border (`border-l-4 style={{ borderColor: tierColor }}`).
+The tier card spans the same width as each balance card in a 3-column grid (`md:grid-cols-3`). The tier is visually differentiated by having the tier badge as the primary visual element at the top, with the tier number displayed large (`text-3xl font-semibold`) and the tier color applying as a colored left border (`border-l-4 style={{ borderColor: tierColor }}`).
 
 ### Trade Card Layout
 
