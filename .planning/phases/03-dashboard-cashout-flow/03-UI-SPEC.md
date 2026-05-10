@@ -1,7 +1,8 @@
 ---
 phase: 3
 slug: dashboard-cashout-flow
-status: draft
+status: approved
+reviewed_at: 2026-05-10
 shadcn_initialized: true
 preset: none
 created: 2026-05-10
