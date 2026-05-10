@@ -42,8 +42,8 @@ Declared values (multiples of 4 only):
 | md | 16px | Default element spacing, card content padding supplement |
 | lg | 24px | Card gap, section header-to-content |
 | xl | 32px | Between major sections (stats row → trade list) |
-| 2xl | 48px | Page vertical padding (`py-8` = 32px; `mt-8` between sections) |
-| 3xl | 64px | Not used in this phase |
+| 2xl | 32px | Page vertical padding (`py-8`); section spacing (`mt-8`) |
+| 3xl | 48px | Not used in this phase |
 
 Exceptions:
 - Touch targets for icon-only buttons (Settings, collapse chevron): minimum 44px hit area via `p-2.5` wrapper
@@ -58,19 +58,18 @@ Exceptions:
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Display | 30px (text-3xl) | 700 (bold) | 1.2 | SOL balance amounts in stat cards |
+| Display | 30px (text-3xl) | 600 (semibold) | 1.2 | SOL balance amounts in stat cards |
 | Heading | 20px (text-xl) | 600 (semibold) | 1.2 | Section headings ("Recent Trades"), modal title |
 | Body | 16px (text-base) | 400 (normal) | 1.5 | USD amounts, breakdown panel labels and values |
-| Label | 14px (text-sm) | 400 (normal) | 1.5 | Wallet address (truncated), card metadata, tier subtitle |
-| Micro | 12px (text-xs) | 500 (medium) | 1.4 | Badge text (tier label, "Loss", "Cashed Out"), ROI/P&L inline chips |
+| Label | 14px (text-sm) | 400 (normal) | 1.5 | Wallet address (truncated), card metadata, tier subtitle, badge text (tier label, "Loss", "Cashed Out"), ROI/P&L inline chips |
 
-**Weight declarations (2 primary):** regular 400 + semibold 600. Bold 700 reserved for display numerics only (SOL amounts).
+**Weight declarations (exactly 2):** regular 400 + semibold 600. No other weights used.
 
 **Font stack:**
 - Primary: `var(--font-geist-sans)` via `font-sans` — all body and UI text
 - Monospace: `var(--font-geist-mono)` via `font-mono` — token mint addresses, wallet addresses, SOL amounts in cashout modal
 
-**Source:** Existing `dashboard/page.tsx` established `text-3xl font-bold`, `text-xl font-semibold`, `text-lg`, `text-sm`. Normalized to exact 4-size scale.
+**Source:** Existing `dashboard/page.tsx` established `text-3xl font-bold`, `text-xl font-semibold`, `text-lg`, `text-sm`. Normalized to exact 4-size scale. Micro (12px) merged into Label (14px/text-sm); bold (700) and medium (500) weights eliminated — all display numerics use semibold (600).
 
 ---
 
@@ -135,7 +134,7 @@ All components already installed. No new shadcn installs required for this phase
 |-----------|------|---------------|
 | `Card`, `CardHeader`, `CardTitle`, `CardContent` | `@/components/ui/card` | Stat cards (trading wallet, vault wallet, tier), trade cards |
 | `Badge` | `@/components/ui/badge` | Tier label badge, "Cashed Out" chip, "Loss" chip — with className overrides for tier colors |
-| `Button` | `@/components/ui/button` | "Refresh Trades", "Cash Out", "Confirm Cashout", "Cancel", copy button |
+| `Button` | `@/components/ui/button` | "Refresh Trades", "Cash Out", "Confirm Cashout", "Go Back", copy button |
 | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogFooter` | `@/components/ui/dialog` | Cashout confirmation modal |
 | `Skeleton` | `@/components/ui/skeleton` | Loading state for trade list and balance cards |
 | `Progress` | `@/components/ui/progress` | Monthly goal progress indicator (minimal — DASH-06) |
@@ -149,7 +148,7 @@ All components already installed. No new shadcn installs required for this phase
 | `TradeList` | `src/components/dashboard/TradeList.tsx` | List of TradeCard components with section header + sync button |
 | `TradeCard` | `src/components/dashboard/TradeCard.tsx` | Collapsed: token, P&L, ROI, cashout amount; expands to CashoutBreakdown |
 | `CashoutBreakdown` | `src/components/dashboard/CashoutBreakdown.tsx` | Expanded panel: tier/bonus/streak/boost breakdown + "Cash Out" button |
-| `CashoutModal` | `src/components/dashboard/CashoutModal.tsx` | Confirmation dialog: amount, vault address with copy, confirm/cancel |
+| `CashoutModal` | `src/components/dashboard/CashoutModal.tsx` | Confirmation dialog: amount, vault address with copy, confirm/go back |
 | `GoalProgress` | `src/components/dashboard/GoalProgress.tsx` | Minimal goal progress line (DASH-06 scope only) |
 
 ### Icons (lucide-react — already installed)
@@ -178,7 +177,7 @@ All components already installed. No new shadcn installs required for this phase
 [Page: bg-black, min-h-screen, px-4 py-8]
   [Container: mx-auto max-w-4xl]
     [Header row: flex justify-between items-center mb-8]
-      [Title: "Dashboard" h1 text-3xl font-bold text-white]
+      [Title: "Dashboard" h1 text-3xl font-semibold text-white]
       [Subtitle: text-zinc-400 text-sm mt-1]
       [Actions: flex gap-2 — Refresh Trades, Settings, Disconnect]
 
@@ -187,26 +186,26 @@ All components already installed. No new shadcn installs required for this phase
         [Tier number + TierBadge + subtitle]
         [Losing streak count (if > 0): subtle warning below badge]
       [TradingWalletCard: Card bg-zinc-950 border-zinc-800]
-        [SOL balance text-3xl font-bold text-white]
-        [USD balance text-lg text-zinc-400]
-        [Truncated address text-xs text-zinc-500 font-mono]
+        [SOL balance text-3xl font-semibold text-white]
+        [USD balance text-base text-zinc-400]
+        [Truncated address text-sm text-zinc-500 font-mono]
       [VaultWalletCard: Card bg-zinc-950 border-zinc-800]
-        [SOL balance text-3xl font-bold text-white]
-        [USD balance text-lg text-zinc-400]
-        [Truncated address text-xs text-zinc-500 font-mono]
+        [SOL balance text-3xl font-semibold text-white]
+        [USD balance text-base text-zinc-400]
+        [Truncated address text-sm text-zinc-500 font-mono]
 
     [TradeList section]
       [Section header: flex justify-between items-center mb-4]
         [h2: "Recent Trades" text-xl font-semibold text-white]
         [Refresh Trades button: outline, border-zinc-700 bg-zinc-900]
       [GoalProgress: single line progress indicator — "Goal: $X / $400 this month"]
-      [TradeCard list: flex flex-col gap-3 mt-4]
+      [TradeCard list: flex flex-col gap-3 mt-8]
         [TradeCard × up to 10]
 ```
 
 ### StatsRow — Tier Card Treatment
 
-The tier card spans the same width as each balance card in a 3-column grid (`md:grid-cols-3`). The tier is visually differentiated by having the tier badge as the primary visual element at the top, with the tier number displayed large (`text-4xl font-bold`) and the tier color applying as a colored left border (`border-l-4 style={{ borderColor: tierColor }}`).
+The tier card spans the same width as each balance card in a 3-column grid (`md:grid-cols-3`). The tier is visually differentiated by having the tier badge as the primary visual element at the top, with the tier number displayed large (`text-4xl font-semibold`) and the tier color applying as a colored left border (`border-l-4 style={{ borderColor: tierColor }}`).
 
 ### Trade Card Layout
 
@@ -232,8 +231,8 @@ The tier card spans the same width as each balance card in a 3-column grid (`md:
       [Streak multiplier: "Streak ×{N}" — ×{X}]
       [Goal boost: "Goal boost" — +{X}%]
       [Divider]
-      [Final: "Take off the table" bold — {X} SOL ({Y}%)]
-    [Cash Out button: w-full mt-4, variant default (white bg, black text)]
+      [Final: "Take off the table" font-semibold — {X} SOL ({Y}%)]
+    [Cash Out button: w-full mt-8, variant default (white bg, black text)]
 ```
 
 ### Cashout Modal
@@ -244,17 +243,17 @@ The tier card spans the same width as each balance card in a 3-column grid (`md:
     [DialogHeader]
       [DialogTitle: "Confirm Cashout" text-white]
       [Description: "Transfer SOL to your vault wallet, then confirm below." text-zinc-400 text-sm]
-    [Body: space-y-4 py-4]
+    [Body: space-y-4 py-8]
       [Amount row: flex justify-between items-center]
         [Label: "Amount" text-zinc-400 text-sm]
-        [Value: "{X.XXXX} SOL" text-white font-bold font-mono text-lg]
+        [Value: "{X.XXXX} SOL" text-white font-semibold font-mono text-base]
       [Vault address row: flex flex-col gap-2]
         [Label: "Vault wallet" text-zinc-400 text-sm]
         [Address + copy button: flex items-center gap-2 bg-zinc-900 rounded p-3]
-          [Address: font-mono text-xs text-zinc-300 flex-1 break-all]
-          [Copy button: icon-only, 36px, border-zinc-700]
-    [DialogFooter: flex gap-2 mt-2]
-      [Cancel: variant outline, border-zinc-700 text-zinc-400]
+          [Address: font-mono text-sm text-zinc-300 flex-1 break-all]
+          [Copy button: icon-only, 36px, border-zinc-700, aria-label="Copy vault address"]
+    [DialogFooter: flex gap-2 mt-8]
+      [Go Back: variant outline, border-zinc-700 text-zinc-400]
       [Confirm Cashout: variant default (white bg), disabled + Loader2 while pending]
 ```
 
@@ -269,7 +268,7 @@ The tier card spans the same width as each balance card in a 3-column grid (`md:
 - Expansion: instant (no animation required for MVP)
 
 ### Copy Vault Address
-- Click `Copy` icon button
+- Click `Copy` icon button (`aria-label="Copy vault address"`)
 - `navigator.clipboard.writeText(vaultAddress)` fires
 - Icon switches from `Copy` to `Check` (green) for 2 seconds via `setTimeout`
 - No toast — the inline visual feedback is sufficient
@@ -283,6 +282,7 @@ The tier card spans the same width as each balance card in a 3-column grid (`md:
 6. `useMutation(confirmCashout)` resolves:
    - **Success:** Modal closes, `toast.success("Cashout confirmed — {X.XXXX} SOL logged")`, trade card shows "Cashed Out" badge, `useQuery` auto-updates wallet balances
    - **Error:** Modal stays open, `toast.error("Failed to confirm cashout. Try again.")`, button returns to active state
+7. User clicks "Go Back" to dismiss modal without confirming
 
 ### Sync Button
 - Exists in both header area (original) and Trade List section header
@@ -298,7 +298,7 @@ The tier card spans the same width as each balance card in a 3-column grid (`md:
 
 ### Losing Streak Display
 - Surface streak count on the tier card if `currentLosingStreak > 0`
-- Format: `"⚠ {N}-loss streak"` in `text-xs text-orange-400` below the tier badge subtitle
+- Format: `"⚠ {N}-loss streak"` in `text-sm text-orange-400` below the tier badge subtitle
 - Hide entirely when streak = 0 (no positive reinforcement for 0 streak — it is the default)
 
 ---
@@ -309,7 +309,7 @@ The tier card spans the same width as each balance card in a 3-column grid (`md:
 |---------|------|
 | Primary CTA (cashout initiation) | "Cash Out" |
 | Primary CTA (cashout confirmation) | "Confirm Cashout" |
-| Cashout cancel | "Cancel" |
+| Cashout cancel | "Go Back" |
 | Empty state heading (no trades) | "No trades yet" |
 | Empty state body | "Sync your wallet to detect closed trades and get cashout recommendations." |
 | Empty state CTA | "Refresh Trades" |
@@ -364,8 +364,8 @@ Every UI element that has multiple states must be explicitly handled:
 
 | State | Visual Treatment |
 |-------|-----------------|
-| Idle | "Confirm Cashout" button active, white bg, black text |
-| Confirming | Button disabled, `Loader2 animate-spin`, text "Confirming..." |
+| Idle | "Confirm Cashout" button active, white bg, black text; "Go Back" button available |
+| Confirming | "Confirm Cashout" button disabled, `Loader2 animate-spin`, text "Confirming..."; "Go Back" button disabled |
 | Success | Modal closes, toast fires |
 | Error | Modal stays open, toast fires, button resets |
 
@@ -376,7 +376,7 @@ Every UI element that has multiple states must be explicitly handled:
 | Loading | Skeleton h-10 w-24 for tier number |
 | Tier 1–5 | Color from `getTierColor(tier)` applied to left border + badge background |
 | Losing streak = 0 | Streak line hidden |
-| Losing streak > 0 | `"{N}-loss streak"` in text-xs text-orange-400 |
+| Losing streak > 0 | `"{N}-loss streak"` in text-sm text-orange-400 |
 
 ---
 
