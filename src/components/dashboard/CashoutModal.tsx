@@ -39,6 +39,24 @@ export function CashoutModal({ open, onOpenChange, trade, vaultAddress }: Cashou
   const [isConfirming, setIsConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  if (!vaultAddress) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="bg-zinc-950 border-zinc-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white">No Vault Wallet</DialogTitle>
+            <DialogDescription className="text-zinc-400 text-sm">
+              Set up a vault wallet in Settings before cashing out.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => onOpenChange(false)} variant="outline">Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const handleCopy = async () => {
     await navigator.clipboard.writeText(vaultAddress);
     setCopied(true);
