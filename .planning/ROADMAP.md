@@ -78,10 +78,14 @@ Plans:
   5. System updates wallet balances after cashout confirmation
   6. System caps cashout percentage to prevent over-extraction on mega wins
   7. System persists losing streak across page reloads and resets on any win
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- TBD (will be created during plan-phase)
+- [ ] 03-01-PLAN.md — Wave 0: RED test stubs for 65% cap (CASH-07) + streak update (CASH-03) + component render stubs (Nyquist)
+- [ ] 03-02-PLAN.md — Wave 1: Implement cap + computeUpdatedStreak + confirmCashout mutation + sync.ts fixes
+- [ ] 03-03-PLAN.md — Wave 2: Presentational components — TierBadge, StatsRow, GoalProgress
+- [ ] 03-04-PLAN.md — Wave 2: Presentational components — CashoutBreakdown, CashoutModal, TradeCard, TradeList
+- [ ] 03-05-PLAN.md — Wave 3: Compose all components into dashboard/page.tsx with live Convex data
 
 ### Phase 4: Goal Tracking
 **Goal**: Users set monthly cashout goals and track progress toward them with visual feedback

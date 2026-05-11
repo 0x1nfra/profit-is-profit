@@ -2,7 +2,7 @@
 phase: 3
 slug: dashboard-cashout-flow
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-05-11
 ---
@@ -48,6 +48,12 @@ created: 2026-05-11
 | 03-02-04 | 02 | 2 | DASH-05 | — | Sync button triggers `syncWalletTrades` action | manual | N/A — UI smoke test | — | ⬜ pending |
 | 03-02-05 | 02 | 2 | DASH-06 | — | Goal progress line renders monthly progress | manual | N/A — UI smoke test | — | ⬜ pending |
 
+| 03-03-01 | 03 | 2 | DASH-01, DASH-02, DASH-03 | — | TierBadge renders all 5 tier labels with correct names | behavioral | `pnpm test src/components/dashboard/__tests__/TierBadge.test.tsx` | ❌ W0 stub | ⬜ pending |
+| 03-03-02 | 03 | 2 | DASH-01, DASH-02 | — | StatsRow renders 3-column grid with trading/vault balances | behavioral | `pnpm test src/components/dashboard/__tests__/StatsRow.test.tsx` | ❌ W0 stub | ⬜ pending |
+| 03-03-03 | 03 | 2 | DASH-06 | — | GoalProgress renders "Goal: $X / $Y this month" copy | behavioral | `pnpm test src/components/dashboard/__tests__/GoalProgress.test.tsx` | ❌ W0 stub | ⬜ pending |
+| 03-04-01 | 04 | 2 | DASH-04, DASH-05, CASH-04 | T-03-01..T-03-03 | TradeCard renders loss/pending/confirmed states correctly | behavioral | `pnpm test src/components/dashboard/__tests__/TradeCard.test.tsx` | ❌ W0 stub | ⬜ pending |
+| 03-04-02 | 04 | 2 | DASH-05 | — | TradeList renders empty state and sync button copy | behavioral | `pnpm test src/components/dashboard/__tests__/TradeList.test.tsx` | ❌ W0 stub | ⬜ pending |
+
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
 ---
@@ -91,6 +97,6 @@ created: 2026-05-11
 - [ ] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
 - [ ] Feedback latency < 15s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending

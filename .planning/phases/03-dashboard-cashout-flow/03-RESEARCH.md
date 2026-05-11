@@ -562,22 +562,25 @@ const trades = useQuery(api.trades.getUserTrades, { limit: 10 });
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should winning trades start as `"pending"` and losing trades as `"confirmed"`?**
+1. **Should winning trades start as `"pending"` and losing trades as `"confirmed"`?** *(RESOLVED: Plan 02 Task 3, EDIT 3)*
    - What we know: Current code hardcodes `status: "confirmed" as const` for all trades in `sync.ts`
    - What's unclear: Was this intentional or a placeholder? With the current code, the "Cash Out" button can never appear for freshly synced trades
    - Recommendation: Change to `status: trade.netProfitSol > 0 ? "pending" : "confirmed"` in `sync.ts` — this is the correct semantic
+   - **Resolution:** Implemented in Plan 02 Task 3 (EDIT 3). Winning trades saved as `"pending"`, losing trades as `"confirmed"`. Confirmed by `grep 'parsed.netProfit > 0 ? "pending" : "confirmed"' convex/sync.ts` acceptance criterion.
 
-2. **Does `confirmCashout` need a Helius balance refetch, or is optimistic update sufficient?**
+2. **Does `confirmCashout` need a Helius balance refetch, or is optimistic update sufficient?** *(RESOLVED: Plan 02 Task 2, T-03-04 disposition)*
    - What we know: After user manually transfers SOL, the actual on-chain balances will reflect the cashout already; the app's Convex records will be slightly off until next sync
    - What's unclear: Is the optimistic balance update (subtract cashout from stored balance) acceptable, or must we fetch live from Helius?
    - Recommendation: Optimistic update is fine for MVP; the sync button gives users a way to get fresh on-chain balances
+   - **Resolution:** Optimistic update adopted (T-03-04 accepted). `confirmCashout` patches `balanceSol` only; `balanceUsd` reconciled on next Helius sync. No `solPriceUsd` arg accepted.
 
-3. **DASH-06 scope in Phase 3 vs Phase 4:**
+3. **DASH-06 scope in Phase 3 vs Phase 4:** *(RESOLVED: Plan 03 Task 3 + Plan 05)*
    - What we know: DASH-06 is listed in Phase 3 requirements but Goal Tracking is Phase 4's primary focus
    - What's unclear: How much goal UI to build now vs defer to Phase 4
    - Recommendation: Phase 3 should show a minimal progress indicator (e.g., "Goal: $X / $400 this month") using `getGoalSettings` query. Full goal editing and progress bar is Phase 4.
+   - **Resolution:** `GoalProgress` component (Plan 03 Task 3) renders "Goal: $X / $Y this month" + progress bar from props. Plan 05 wires `useQuery(api.goalSettings.getGoalSettings)` and `currentMonthProgressUsd` into the component. Full goal management deferred to Phase 4.
 
 ---
 
