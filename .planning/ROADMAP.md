@@ -83,8 +83,8 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md — Wave 0: RED test stubs for 65% cap (CASH-07) + streak update (CASH-03) + component render stubs (Nyquist)
 - [x] 03-02-PLAN.md — Wave 1: Implement cap + computeUpdatedStreak + confirmCashout mutation + sync.ts fixes
-- [ ] 03-03-PLAN.md — Wave 2: Presentational components — TierBadge, StatsRow, GoalProgress
-- [ ] 03-04-PLAN.md — Wave 2: Presentational components — CashoutBreakdown, CashoutModal, TradeCard, TradeList
+- [x] 03-03-PLAN.md — Wave 2: Presentational components — TierBadge, StatsRow, GoalProgress
+- [x] 03-04-PLAN.md — Wave 2: Presentational components — CashoutBreakdown, CashoutModal, TradeCard, TradeList
 - [ ] 03-05-PLAN.md — Wave 3: Compose all components into dashboard/page.tsx with live Convex data
 
 ### Phase 4: Goal Tracking
