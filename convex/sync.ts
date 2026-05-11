@@ -147,8 +147,12 @@ export const syncWalletTrades = action({
         : 0;
     })();
 
+    // Fetch current SOL balance before building trade records so tier is
+    // calculated from the post-sync balance, not the stale stored value.
+    const solBalance: number = await getSolBalance(args.walletAddress);
+
     // Build trade records with cashout calculations
-    const currentTier = calculateTier(wallet.balanceSol);
+    const currentTier = calculateTier(solBalance);
     const tradesToSave: TradeRecord[] = closedTrades.map((parsed) => {
       let cashoutResult: CashoutResult | null = null;
       if (parsed.netProfit > 0) {
@@ -209,7 +213,6 @@ export const syncWalletTrades = action({
     }
 
     // Update wallet balance and sync timestamp
-    const solBalance: number = await getSolBalance(args.walletAddress);
     await ctx.runMutation(internal.wallets.updateWalletBalance, {
       walletId: wallet._id,
       balanceSol: solBalance,
