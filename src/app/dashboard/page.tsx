@@ -5,11 +5,36 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useWalletStore } from "@/lib/stores/wallet-store";
-import { Settings, LogOut, RefreshCw, Loader2 } from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StatsRow } from "@/components/dashboard/StatsRow";
+import { TradeList } from "@/components/dashboard/TradeList";
+import { GoalProgress } from "@/components/dashboard/GoalProgress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DEFAULTS } from "@/lib/constants";
+
+function LoadingSkeleton() {
+  return (
+    <div className="min-h-screen bg-black p-8">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid gap-6 md:grid-cols-3">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+        <Skeleton className="h-4 w-full" />
+        <div className="space-y-3">
+          <Skeleton className="h-16" />
+          <Skeleton className="h-16" />
+          <Skeleton className="h-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -19,10 +44,17 @@ export default function DashboardPage() {
 
   // Convex reactive queries — auto-update when DB changes
   const wallets = useQuery(api.wallets.getUserWallets);
-  const trades = useQuery(api.trades.getUserTrades, { limit: 50 });
+  const trades = useQuery(api.trades.getUserTrades, { limit: 10 });
   const syncTrades = useAction(api.sync.syncWalletTrades);
+  const userState = useQuery(api.userState.getUserState);
+  const goalSettings = useQuery(api.goalSettings.getGoalSettings);
 
-  const isLoading = wallets === undefined;
+  const isLoading =
+    wallets === undefined ||
+    trades === undefined ||
+    userState === undefined ||
+    goalSettings === undefined;
+
   const tradingWallet = wallets?.find((w) => w.walletType === "trading");
   const vaultWallet = wallets?.find((w) => w.walletType === "vault");
 
@@ -84,111 +116,53 @@ export default function DashboardPage() {
     }
   };
 
-  const truncateAddress = (address: string) =>
-    `${address.slice(0, 4)}...${address.slice(-4)}`;
-
-  if (isLoading || wallets === null || wallets.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="text-zinc-400">Loading dashboard...</div>
-      </div>
-    );
-  }
+  if (isLoading) return <LoadingSkeleton />;
 
   return (
-    <div className="min-h-screen bg-black px-4 py-8">
-      <div className="mx-auto max-w-4xl">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-            <p className="mt-1 text-zinc-400">Your wallet balances and profit tracking</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleSync}
-              disabled={isSyncing || !tradingWallet}
-              variant="outline"
-              className="border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
-            >
-              {isSyncing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Syncing...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Refresh Trades
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
-              title="Settings"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={handleDisconnect}
-              variant="outline"
-              className="border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Disconnect
-            </Button>
-          </div>
+    <div className="min-h-screen bg-black">
+      <div className="max-w-4xl mx-auto p-8 space-y-8">
+        {/* Header row: Settings + Sign Out */}
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            title="Settings"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={handleDisconnect}
+            variant="outline"
+            className="border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Disconnect
+          </Button>
         </div>
 
-        {/* Wallet Balance Cards */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {tradingWallet && (
-            <Card className="bg-zinc-950 border-zinc-800">
-              <CardHeader>
-                <CardTitle className="text-lg text-zinc-300">Trading Wallet</CardTitle>
-                <p className="text-sm text-zinc-500">{truncateAddress(tradingWallet.address)}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-white">
-                    {tradingWallet.balanceSol.toFixed(4)} SOL
-                  </p>
-                  <p className="text-lg text-zinc-400">
-                    ${tradingWallet.balanceUsd.toFixed(2)} USD
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          {vaultWallet && (
-            <Card className="bg-zinc-950 border-zinc-800">
-              <CardHeader>
-                <CardTitle className="text-lg text-zinc-300">Vault Wallet</CardTitle>
-                <p className="text-sm text-zinc-500">{truncateAddress(vaultWallet.address)}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-white">
-                    {vaultWallet.balanceSol.toFixed(4)} SOL
-                  </p>
-                  <p className="text-lg text-zinc-400">
-                    ${vaultWallet.balanceUsd.toFixed(2)} USD
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Recent Trades (placeholder for Phase 3) */}
-        {trades && trades.length > 0 && (
-          <div className="mt-8">
-            <h2 className="mb-4 text-xl font-semibold text-white">Recent Trades</h2>
-            <p className="text-zinc-400">{trades.length} closed trade{trades.length > 1 ? "s" : ""} synced</p>
-          </div>
+        {/* Stats Row: Tier + Trading Wallet + Vault Wallet */}
+        {tradingWallet && vaultWallet && (
+          <StatsRow
+            tradingWallet={tradingWallet}
+            vaultWallet={vaultWallet}
+            losingStreak={userState?.currentLosingStreak ?? 0}
+          />
         )}
+
+        {/* Monthly Goal Progress (DASH-06 — minimal Phase 3 scope) */}
+        <GoalProgress
+          currentProgressUsd={goalSettings?.currentMonthProgressUsd ?? 0}
+          monthlyGoalUsd={goalSettings?.monthlyGoalUsd ?? DEFAULTS.MONTHLY_GOAL_USD}
+        />
+
+        {/* Trade List with Sync Button (DASH-04, DASH-05) */}
+        <TradeList
+          trades={trades ?? []}
+          vaultAddress={vaultWallet?.address ?? ""}
+          isSyncing={isSyncing}
+          onSync={handleSync}
+        />
       </div>
     </div>
   );
