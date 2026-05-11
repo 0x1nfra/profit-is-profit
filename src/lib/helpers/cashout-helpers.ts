@@ -128,19 +128,18 @@ export function applyGoalBoost(
  * - Gap $201+: +20% boost
  */
 export function getGoalBoostForGap(gapAmount: number): number {
-  if (gapAmount <= 0) {
-    return 0; // No boost if on track or ahead
-  }
+  if (gapAmount <= 0) return 0;
 
   for (const level of GOAL_BOOST_LEVELS) {
-    if (level.maxGap === null || gapAmount <= level.maxGap) {
-      if (gapAmount >= level.minGap) {
-        return level.boostPercent;
-      }
+    const withinMax = level.maxGap === null || gapAmount <= level.maxGap;
+    if (gapAmount >= level.minGap && withinMax) {
+      return level.boostPercent;
     }
   }
 
-  return 0; // Default: no boost
+  // Should be unreachable given GOAL_BOOST_LEVELS covers all positive gaps.
+  // Throw to surface any future misconfiguration rather than silently returning 0.
+  throw new Error(`No boost level found for gap: ${gapAmount}`);
 }
 
 /**
