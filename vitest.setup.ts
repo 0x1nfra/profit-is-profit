@@ -1,6 +1,15 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
+// Mock Convex react hooks — prevents "ConvexProvider not found" errors in unit tests.
+// Component tests verify UI behavior only; Convex mutations are integration-tested separately.
+vi.mock('convex/react', () => ({
+  useMutation: () => vi.fn(),
+  useQuery: () => undefined,
+  useAction: () => vi.fn(),
+  ConvexProvider: ({ children }: { children: React.ReactNode }) => children,
+}))
+
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
