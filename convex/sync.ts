@@ -3,6 +3,7 @@ import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import type { CashoutResult } from "../src/lib/helpers/cashout-helpers";
+import { computeUpdatedStreak } from "../src/lib/helpers/cashout-helpers";
 import {
   getSolBalance,
   getSwapHistory,
@@ -39,7 +40,7 @@ type TradeRecord = {
   goalBoostMultiplier: number;
   finalCashoutPercent: number;
   recommendedCashoutSol: number;
-  status: "confirmed";
+  status: "pending" | "confirmed";
   positionOpenedAt: string | undefined;
   positionClosedAt: string;
 };
@@ -178,7 +179,7 @@ export const syncWalletTrades = action({
         goalBoostMultiplier: cashoutResult?.breakdown.goalBoostMultiplier ?? 1,
         finalCashoutPercent: cashoutResult?.finalCashoutPercent ?? 0,
         recommendedCashoutSol: cashoutResult?.cashoutAmountSOL ?? 0,
-        status: "confirmed" as const,
+        status: (parsed.netProfit > 0 ? "pending" : "confirmed") as "pending" | "confirmed",
         positionOpenedAt: parsed.positionOpenedAt?.toISOString() ?? undefined,
         positionClosedAt: parsed.positionClosedAt.toISOString(),
       };
@@ -190,6 +191,22 @@ export const syncWalletTrades = action({
       tradingWalletId: wallet._id,
       trades: tradesToSave,
     });
+
+    // Update losing streak (CASH-03) — process newly saved trades chronologically.
+    // computeUpdatedStreak sorts by positionClosedAt and applies win=reset / loss=increment.
+    if (tradesToSave.length > 0) {
+      const newStreak: number = computeUpdatedStreak(
+        losingStreak,
+        tradesToSave.map((t: TradeRecord) => ({
+          netProfitSol: t.netProfitSol,
+          positionClosedAt: t.positionClosedAt,
+        }))
+      );
+      await ctx.runMutation(internal.userState.updateLosingStreak, {
+        userId,
+        newStreak,
+      });
+    }
 
     // Update wallet balance and sync timestamp
     const solBalance: number = await getSolBalance(args.walletAddress);
