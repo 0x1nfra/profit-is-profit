@@ -183,7 +183,7 @@ export const syncWalletTrades = action({
         goalBoostMultiplier: cashoutResult?.breakdown.goalBoostMultiplier ?? 1,
         finalCashoutPercent: cashoutResult?.finalCashoutPercent ?? 0,
         recommendedCashoutSol: cashoutResult?.cashoutAmountSOL ?? 0,
-        status: (parsed.netProfit > 0 ? "pending" : "confirmed") as "pending" | "confirmed",
+        status: "pending" as "pending",
         positionOpenedAt: parsed.positionOpenedAt?.toISOString() ?? undefined,
         positionClosedAt: parsed.positionClosedAt.toISOString(),
       };
