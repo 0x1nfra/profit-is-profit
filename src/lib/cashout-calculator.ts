@@ -12,6 +12,7 @@ import {
   validateCashoutInput,
   getBaseRate,
 } from "./helpers/cashout-helpers";
+import { CASHOUT_CAP_PERCENT } from "./constants";
 
 /**
  * Calculates the final cashout percentage and amount based on tier, ROI, streak, and optional goal boost
@@ -54,12 +55,16 @@ export function calculateCashout(input: CashoutInput): CashoutResult {
 
   // Step 5: Apply goal boost if provided
   // Goal boost is applied as a multiplier: percent × (1 + boost/100)
-  const finalCashoutPercent = applyGoalBoost(
+  const boostedPercent = applyGoalBoost(
     preBoostPercent,
     input.goalBoostPercent
   );
 
-  // Step 6: Calculate cashout amount in SOL
+  // Step 5b: Apply hard cap (CASH-07 — prevents over-extraction on mega wins)
+  // Tier 5 + 200% ROI + 20% boost = 96% uncapped; 65% cap clamps it.
+  const finalCashoutPercent = Math.min(boostedPercent, CASHOUT_CAP_PERCENT);
+
+  // Step 6: Calculate cashout amount in SOL (uses capped percent)
   const cashoutAmountSOL =
     (input.netProfitSOL * finalCashoutPercent) / 100;
 

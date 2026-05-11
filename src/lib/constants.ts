@@ -112,6 +112,15 @@ export const CALCULATION = {
 } as const;
 
 // =============================================
+// CASHOUT CAP (Phase 3 — CASH-07)
+// Hard cap on final cashout percentage to prevent over-extraction
+// on mega wins (e.g., Tier 5 + 200% ROI + 20% goal boost = 96% uncapped).
+// CASHOUT_CAP_PERCENT is imported by cashout-calculator.ts in Step 5b.
+// =============================================
+
+export const CASHOUT_CAP_PERCENT = 65; // Maximum final cashout percentage
+
+// =============================================
 // ROI DISPLAY CONSTANTS
 // =============================================
 

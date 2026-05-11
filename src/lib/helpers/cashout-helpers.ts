@@ -222,5 +222,18 @@ export function computeUpdatedStreak(
   startingStreak: number,
   tradeResults: Array<{ netProfitSol: number; positionClosedAt: string }>
 ): number {
-  throw new Error("Not implemented — see Plan 02");
+  // Sort ASC by positionClosedAt (ISO 8601 strings sort correctly via localeCompare)
+  const sorted = [...tradeResults].sort((a, b) =>
+    a.positionClosedAt.localeCompare(b.positionClosedAt)
+  );
+
+  let streak = startingStreak;
+  for (const trade of sorted) {
+    if (trade.netProfitSol > 0) {
+      streak = 0; // Win resets
+    } else {
+      streak += 1; // Loss (or zero) increments
+    }
+  }
+  return streak;
 }

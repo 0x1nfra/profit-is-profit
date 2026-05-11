@@ -94,8 +94,9 @@ describe('calculateCashout', () => {
         roiPercent: 150,
         losingStreak: 0,
       })
-      expect(result.finalCashoutPercent).toBe(80)
-      expect(result.cashoutAmountSOL).toBe(4)
+      // Uncapped: 60 + 20 = 80%; capped to 65% by CASHOUT_CAP_PERCENT (CASH-07)
+      expect(result.finalCashoutPercent).toBe(65)
+      expect(result.cashoutAmountSOL).toBe(3.25)
     })
 
     it('Tier 4 (AGGRESSIVE) with standard win', () => {
