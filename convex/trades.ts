@@ -100,9 +100,9 @@ export const confirmCashout = mutation({
       throw new Error("Trade not found");
     }
 
-    // T-03-02: Replay protection (prevent double-confirm)
-    if (trade.status === "confirmed") {
-      throw new Error("Already confirmed");
+    // T-03-02: Replay protection (prevent double-confirm or actioning overridden trades)
+    if (trade.status !== "pending") {
+      throw new Error("Trade is not in a pending state");
     }
 
     // T-03-03: Input bounds (prevent overextraction via inflated client value)
