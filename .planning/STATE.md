@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 3 of 5 (Dashboard & Cashout Flow) — PLANNED
-Plan: 0 of 5 — Ready to execute
-Status: Planning complete. 5 plans across 4 waves. Ready for execution.
-Last activity: 2026-05-11 — Phase 3 planned: 5 PLAN.md files created, all 14 requirements covered, plan checker passed.
+Phase: 3 of 5 (Dashboard & Cashout Flow) — IN PROGRESS
+Plan: 1 of 5 — Wave 0 complete
+Status: Executing. Plan 03-01 complete (RED test suite). Wave 1 next.
+Last activity: 2026-05-11 — Plan 03-01 complete: RED tests for cashout cap + streak helpers + component stubs (16 failing as expected, 249 passing).
 
-Progress: [░░░░░░░░░░] 0% (Phase 3)
+Progress: [██░░░░░░░░] 20% (Phase 3)
 
 ## Performance Metrics
 
