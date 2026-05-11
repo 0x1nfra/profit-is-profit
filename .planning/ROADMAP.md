@@ -85,7 +85,7 @@ Plans:
 - [x] 03-02-PLAN.md — Wave 1: Implement cap + computeUpdatedStreak + confirmCashout mutation + sync.ts fixes
 - [x] 03-03-PLAN.md — Wave 2: Presentational components — TierBadge, StatsRow, GoalProgress
 - [x] 03-04-PLAN.md — Wave 2: Presentational components — CashoutBreakdown, CashoutModal, TradeCard, TradeList
-- [ ] 03-05-PLAN.md — Wave 3: Compose all components into dashboard/page.tsx with live Convex data
+- [x] 03-05-PLAN.md — Wave 3: Compose all components into dashboard/page.tsx with live Convex data
 
 ### Phase 4: Goal Tracking
 **Goal**: Users set monthly cashout goals and track progress toward them with visual feedback
