@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Prevent traders from giving back profits by automatically calculating how much to take off the table after every winning trade, based on wallet health and trade performance.
-**Current focus:** Phase 2 - Trade Detection & Sync (UAT) — Phase 2.1 Convex Migration COMPLETE
+**Current focus:** Phase 3 - Dashboard & Cashout Flow — Ready to execute
 
 ## Current Position
 
-Phase: 2.1 of 5 (Convex Migration) — COMPLETE
-Plan: 5 of 5 — COMPLETE
-Status: Phase 2.1 complete. Ready for Phase 2 UAT or Phase 3 (Profit Calculation).
-Last activity: 2026-02-24 — Completed Plan 05 Task 2: E2E flow verified by human. Full Supabase removal + Convex migration done.
+Phase: 3 of 5 (Dashboard & Cashout Flow) — PLANNED
+Plan: 0 of 5 — Ready to execute
+Status: Planning complete. 5 plans across 4 waves. Ready for execution.
+Last activity: 2026-05-11 — Phase 3 planned: 5 PLAN.md files created, all 14 requirements covered, plan checker passed.
 
-Progress: [██████████] 100% (Phase 2.1)
+Progress: [░░░░░░░░░░] 0% (Phase 3)
 
 ## Performance Metrics
 
@@ -103,10 +103,10 @@ None yet.
 **From research:**
 - Helius API beta stability — May have undocumented edge cases, need extensive testing with real wallets during Phase 1
 - ~~Wallet signature verification pattern — Need to choose nonce generation strategy (timestamp vs UUID vs Supabase challenge) during Phase 1 planning~~ **RESOLVED:** Using timestamp-based messages (01-01)
-- Cashout cap tuning — Hard cap of 65% needs validation, consider user override during Phase 3
+- ~~Cashout cap tuning — Hard cap of 65% needs validation, consider user override during Phase 3~~ **RESOLVED:** 65% hard cap enforced in `calculateCashout()` in Plan 03-02; no user override in Phase 3 (deferred to v2 CUSTOM-* requirements)
 
 ## Session Continuity
 
-Last session: 2026-02-24
-Stopped at: Completed Phase 2.1 — 02.1-05-PLAN.md all tasks done, E2E flow verified by human
-Resume file: N/A — Phase 2.1 complete. Next: Phase 2 UAT or Phase 3 (Profit Calculation)
+Last session: 2026-05-11
+Stopped at: Phase 3 planning complete — 5 PLAN.md files created, plan checker passed, all 14 requirements covered
+Resume file: N/A — Phase 3 ready to execute
