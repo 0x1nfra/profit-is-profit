@@ -31,7 +31,7 @@ export function CashoutBreakdown({ trade, onCashOut }: CashoutBreakdownProps) {
           <span className="text-white">+{trade.roiBonusPercent}%</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-zinc-400">Streak ×{trade.losingStreakAtTrade}</span>
+          <span className="text-zinc-400">Streak ({trade.losingStreakAtTrade} losses)</span>
           <span className="text-white">×{trade.streakMultiplier}</span>
         </div>
         <div className="flex justify-between text-sm">
