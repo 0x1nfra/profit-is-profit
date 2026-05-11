@@ -1,5 +1,5 @@
 // convex/trades.ts
-import { query, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getUserTrades = query({
@@ -69,6 +69,75 @@ export const saveSyncedTrades = internalMutation({
           ...trade,
         });
       }
+    }
+  },
+});
+
+/**
+ * Confirms a cashout after the user has manually transferred SOL to their vault.
+ * Patches trade.status to "confirmed" and updates wallet balances optimistically.
+ *
+ * Security mitigations:
+ * - T-03-01 (IDOR): verifies trade.userId === identity.subject before patching
+ * - T-03-02 (Replay): rejects if trade.status === "confirmed" already
+ * - T-03-03 (Overextraction): validates 0 < actualCashoutSol <= recommendedCashoutSol
+ * - T-03-04 (Price manipulation): does NOT update balanceUsd from client price;
+ *   balanceUsd is reconciled on next sync via Helius (display-only impact).
+ */
+export const confirmCashout = mutation({
+  args: {
+    tradeId: v.id("trades"),
+    actualCashoutSol: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // T-03-01: Auth check
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    // T-03-01: Ownership check (prevent cross-user IDOR)
+    const trade = await ctx.db.get(args.tradeId);
+    if (!trade || trade.userId !== identity.subject) {
+      throw new Error("Trade not found");
+    }
+
+    // T-03-02: Replay protection (prevent double-confirm)
+    if (trade.status === "confirmed") {
+      throw new Error("Already confirmed");
+    }
+
+    // T-03-03: Input bounds (prevent overextraction via inflated client value)
+    if (args.actualCashoutSol <= 0) {
+      throw new Error("Cashout amount must be positive");
+    }
+    if (args.actualCashoutSol > trade.recommendedCashoutSol) {
+      throw new Error("Cashout amount exceeds recommended amount");
+    }
+
+    // Patch trade to confirmed
+    await ctx.db.patch(args.tradeId, {
+      status: "confirmed",
+      actualCashoutSol: args.actualCashoutSol,
+    });
+
+    // Update trading wallet balance (subtract; floor at 0)
+    const tradingWallet = await ctx.db.get(trade.tradingWalletId);
+    if (tradingWallet) {
+      await ctx.db.patch(tradingWallet._id, {
+        balanceSol: Math.max(0, tradingWallet.balanceSol - args.actualCashoutSol),
+      });
+    }
+
+    // Update vault wallet balance (add) — use compound index, not .filter()
+    const vaultWallet = await ctx.db
+      .query("wallets")
+      .withIndex("by_user_type", (q) =>
+        q.eq("userId", identity.subject).eq("walletType", "vault")
+      )
+      .first();
+    if (vaultWallet) {
+      await ctx.db.patch(vaultWallet._id, {
+        balanceSol: vaultWallet.balanceSol + args.actualCashoutSol,
+      });
     }
   },
 });
