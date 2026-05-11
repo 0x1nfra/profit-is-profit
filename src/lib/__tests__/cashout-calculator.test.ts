@@ -312,4 +312,84 @@ describe('calculateCashout', () => {
       expect(result.cashoutAmountSOL).toBeLessThan(0.000000001)
     })
   })
+
+  describe('CASH-07: 65% cashout cap (Phase 3)', () => {
+    it('caps Tier 5 + 200% ROI + 20% boost at 65% (uncapped would be 96%)', () => {
+      const result = calculateCashout({
+        tier: Tier.MAXIMUM,
+        netProfitSOL: 1,
+        roiPercent: 200,
+        losingStreak: 0,
+        goalBoostPercent: 20,
+      })
+      expect(result.finalCashoutPercent).toBe(65)
+      expect(result.cashoutAmountSOL).toBe(0.65)
+    })
+
+    it('caps Tier 4 + 150% ROI + 20% boost at 65% (uncapped would be 72%)', () => {
+      const result = calculateCashout({
+        tier: Tier.AGGRESSIVE,
+        netProfitSOL: 1,
+        roiPercent: 150,
+        losingStreak: 0,
+        goalBoostPercent: 20,
+      })
+      expect(result.finalCashoutPercent).toBe(65)
+    })
+
+    it('caps Tier 5 + 200% ROI without boost at 65% (uncapped would be 80%)', () => {
+      const result = calculateCashout({
+        tier: Tier.MAXIMUM,
+        netProfitSOL: 1,
+        roiPercent: 200,
+        losingStreak: 0,
+      })
+      expect(result.finalCashoutPercent).toBe(65)
+    })
+
+    it('does NOT cap Tier 3 + 150% ROI + 20% boost (54% is under cap)', () => {
+      const result = calculateCashout({
+        tier: Tier.GROWTH,
+        netProfitSOL: 1,
+        roiPercent: 150,
+        losingStreak: 0,
+        goalBoostPercent: 20,
+      })
+      expect(result.finalCashoutPercent).toBe(54)
+    })
+
+    it('does NOT cap Tier 5 + 50% ROI + 5% boost (63% is under cap)', () => {
+      const result = calculateCashout({
+        tier: Tier.MAXIMUM,
+        netProfitSOL: 1,
+        roiPercent: 50,
+        losingStreak: 0,
+        goalBoostPercent: 5,
+      })
+      expect(result.finalCashoutPercent).toBe(63)
+    })
+
+    it('caps Tier 5 + 50% ROI + 10% boost at 65% (uncapped would be 66%)', () => {
+      const result = calculateCashout({
+        tier: Tier.MAXIMUM,
+        netProfitSOL: 1,
+        roiPercent: 50,
+        losingStreak: 0,
+        goalBoostPercent: 10,
+      })
+      expect(result.finalCashoutPercent).toBe(65)
+    })
+
+    it('cashoutAmountSOL uses capped percentage (not uncapped)', () => {
+      const result = calculateCashout({
+        tier: Tier.MAXIMUM,
+        netProfitSOL: 2,
+        roiPercent: 200,
+        losingStreak: 0,
+        goalBoostPercent: 20,
+      })
+      // 2 SOL * 65% = 1.3 SOL (NOT 2 * 0.96 = 1.92)
+      expect(result.cashoutAmountSOL).toBe(1.3)
+    })
+  })
 })

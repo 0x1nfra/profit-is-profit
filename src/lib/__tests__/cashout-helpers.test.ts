@@ -6,6 +6,7 @@ import {
   getGoalBoostForGap,
   validateCashoutInput,
   getBaseRate,
+  computeUpdatedStreak,
 } from '../helpers/cashout-helpers'
 import { Tier, ValidationError } from '@/types'
 
@@ -244,5 +245,83 @@ describe('getBaseRate', () => {
     expect(getBaseRate(Tier.GROWTH)).toBe(25)
     expect(getBaseRate(Tier.AGGRESSIVE)).toBe(40)
     expect(getBaseRate(Tier.MAXIMUM)).toBe(60)
+  })
+})
+
+describe('computeUpdatedStreak (CASH-03 — Phase 3)', () => {
+  it('returns startingStreak unchanged for empty array', () => {
+    expect(computeUpdatedStreak(5, [])).toBe(5)
+  })
+
+  it('returns 0 when startingStreak=0 and single win', () => {
+    expect(computeUpdatedStreak(0, [
+      { netProfitSol: 1, positionClosedAt: '2026-01-01T00:00:00Z' },
+    ])).toBe(0)
+  })
+
+  it('resets to 0 when startingStreak=2 and single win', () => {
+    expect(computeUpdatedStreak(2, [
+      { netProfitSol: 1, positionClosedAt: '2026-01-01T00:00:00Z' },
+    ])).toBe(0)
+  })
+
+  it('increments to 1 when startingStreak=0 and single loss', () => {
+    expect(computeUpdatedStreak(0, [
+      { netProfitSol: -0.5, positionClosedAt: '2026-01-01T00:00:00Z' },
+    ])).toBe(1)
+  })
+
+  it('increments to 3 when startingStreak=2 and single loss', () => {
+    expect(computeUpdatedStreak(2, [
+      { netProfitSol: -0.5, positionClosedAt: '2026-01-01T00:00:00Z' },
+    ])).toBe(3)
+  })
+
+  it('treats zero profit as loss (increments)', () => {
+    expect(computeUpdatedStreak(0, [
+      { netProfitSol: 0, positionClosedAt: '2026-01-01T00:00:00Z' },
+    ])).toBe(1)
+  })
+
+  it('processes [loss, loss, win] chronologically — last win resets streak to 0', () => {
+    expect(computeUpdatedStreak(0, [
+      { netProfitSol: -0.5, positionClosedAt: '2026-01-01T00:00:00Z' },
+      { netProfitSol: -0.3, positionClosedAt: '2026-01-02T00:00:00Z' },
+      { netProfitSol: 0.8, positionClosedAt: '2026-01-03T00:00:00Z' },
+    ])).toBe(0)
+  })
+
+  it('processes [win, loss, loss] chronologically — final streak is 2', () => {
+    expect(computeUpdatedStreak(0, [
+      { netProfitSol: 0.8, positionClosedAt: '2026-01-01T00:00:00Z' },
+      { netProfitSol: -0.5, positionClosedAt: '2026-01-02T00:00:00Z' },
+      { netProfitSol: -0.3, positionClosedAt: '2026-01-03T00:00:00Z' },
+    ])).toBe(2)
+  })
+
+  it('processes [loss, win, loss] from startingStreak=3 — final streak is 1', () => {
+    expect(computeUpdatedStreak(3, [
+      { netProfitSol: -0.5, positionClosedAt: '2026-01-01T00:00:00Z' },
+      { netProfitSol: 0.8, positionClosedAt: '2026-01-02T00:00:00Z' },
+      { netProfitSol: -0.3, positionClosedAt: '2026-01-03T00:00:00Z' },
+    ])).toBe(1)
+  })
+
+  it('accumulates 4 consecutive losses', () => {
+    expect(computeUpdatedStreak(0, [
+      { netProfitSol: -0.1, positionClosedAt: '2026-01-01T00:00:00Z' },
+      { netProfitSol: -0.2, positionClosedAt: '2026-01-02T00:00:00Z' },
+      { netProfitSol: -0.3, positionClosedAt: '2026-01-03T00:00:00Z' },
+      { netProfitSol: -0.4, positionClosedAt: '2026-01-04T00:00:00Z' },
+    ])).toBe(4)
+  })
+
+  it('sorts out-of-order input ASC by positionClosedAt before processing', () => {
+    // Input deliberately reversed: win first by array index, but later by timestamp
+    // Sorted: loss (Jan 1) → win (Jan 2). Final streak: 0+1=1, then win resets to 0.
+    expect(computeUpdatedStreak(0, [
+      { netProfitSol: 1, positionClosedAt: '2026-03-02T00:00:00Z' },
+      { netProfitSol: -1, positionClosedAt: '2026-03-01T00:00:00Z' },
+    ])).toBe(0)
   })
 })

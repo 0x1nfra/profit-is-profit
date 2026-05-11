@@ -196,10 +196,31 @@ export function validateCashoutInput(input: CashoutInput): ValidationResult {
 
 /**
  * Gets the base cashout rate for a given tier
- * 
+ *
  * @param tier - The tier to get base rate for
  * @returns Base cashout percentage for the tier
  */
 export function getBaseRate(tier: Tier): number {
   return TIER_CONFIG[tier].baseRate;
+}
+
+/**
+ * Computes the updated losing streak after processing a batch of trades.
+ *
+ * Trades are sorted ASCENDING by positionClosedAt (chronological order),
+ * then iterated:
+ * - Win (netProfitSol > 0): streak resets to 0
+ * - Loss (netProfitSol <= 0): streak increments by 1
+ *
+ * @param startingStreak - Current streak before the batch
+ * @param tradeResults - Trades to process; will be sorted internally
+ * @returns Final streak after all trades processed
+ *
+ * Implementation: Plan 02 (currently a RED stub).
+ */
+export function computeUpdatedStreak(
+  startingStreak: number,
+  tradeResults: Array<{ netProfitSol: number; positionClosedAt: string }>
+): number {
+  throw new Error("Not implemented — see Plan 02");
 }
