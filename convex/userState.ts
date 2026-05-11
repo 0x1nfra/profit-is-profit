@@ -1,5 +1,5 @@
 // convex/userState.ts
-import { query, mutation, internalQuery } from "./_generated/server";
+import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getUserState = query({
@@ -43,5 +43,31 @@ export const getOrCreateUserState = mutation({
       currentLosingStreak: 0,
     });
     return await ctx.db.get(id);
+  },
+});
+
+/**
+ * Updates the user's losing streak. Called from sync action after processing trades.
+ * Upserts userState row if it doesn't exist (matches getOrCreateUserState pattern).
+ *
+ * NOT public — only callable from server-side actions/mutations via internal.* api.
+ * No auth check needed: caller must already have validated identity.
+ */
+export const updateLosingStreak = internalMutation({
+  args: { userId: v.string(), newStreak: v.number() },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("userState")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { currentLosingStreak: args.newStreak });
+    } else {
+      await ctx.db.insert("userState", {
+        userId: args.userId,
+        currentLosingStreak: args.newStreak,
+      });
+    }
   },
 });
