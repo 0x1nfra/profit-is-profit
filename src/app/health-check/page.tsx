@@ -1,20 +1,13 @@
 // src/app/health-check/page.tsx
-import { supabaseAdmin } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-async function checkDatabase() {
-  try {
-    if (!supabaseAdmin) {
-      return { status: false, error: "Supabase admin client not initialized" };
-    }
-
-    const { error } = await supabaseAdmin.from("users").select("id").limit(1);
-
-    return { status: !error, error: error?.message };
-  } catch (err) {
-    return { status: false, error: String(err) };
-  }
+async function checkConvex() {
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+  return {
+    status: !!convexUrl,
+    error: !convexUrl ? "NEXT_PUBLIC_CONVEX_URL not configured" : undefined,
+  };
 }
 
 async function checkHelius() {
@@ -28,8 +21,9 @@ async function checkHelius() {
 
 async function checkEnvironment() {
   const checks = {
-    supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    convexUrl: !!process.env.NEXT_PUBLIC_CONVEX_URL,
+    convexSiteUrl: !!process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    jwtPrivateKey: !!process.env.JWT_PRIVATE_KEY,
     heliusKey: !!process.env.HELIUS_API_KEY,
   };
 
@@ -38,13 +32,13 @@ async function checkEnvironment() {
 }
 
 export default async function HealthCheckPage() {
-  const [dbCheck, heliusCheck, envCheck] = await Promise.all([
-    checkDatabase(),
+  const [convexCheck, heliusCheck, envCheck] = await Promise.all([
+    checkConvex(),
     checkHelius(),
     checkEnvironment(),
   ]);
 
-  const allHealthy = dbCheck.status && heliusCheck.status && envCheck.status;
+  const allHealthy = convexCheck.status && heliusCheck.status && envCheck.status;
 
   return (
     <div className="min-h-screen p-8 bg-background">
@@ -67,20 +61,20 @@ export default async function HealthCheckPage() {
 
         {/* Service Checks */}
         <div className="grid gap-4 md:grid-cols-2">
-          {/* Database Check */}
+          {/* Convex Check */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-base">
-                <span>Database (Supabase)</span>
-                <StatusBadge status={dbCheck.status} />
+                <span>Database (Convex)</span>
+                <StatusBadge status={convexCheck.status} />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <CheckItem label="Connection" status={dbCheck.status} />
-                {dbCheck.error && (
+                <CheckItem label="Convex URL Configured" status={convexCheck.status} />
+                {convexCheck.error && (
                   <p className="text-xs text-destructive mt-2">
-                    Error: {dbCheck.error}
+                    Error: {convexCheck.error}
                   </p>
                 )}
               </div>
@@ -121,12 +115,16 @@ export default async function HealthCheckPage() {
             <CardContent>
               <div className="space-y-2 text-sm">
                 <CheckItem
-                  label="Supabase URL"
-                  status={envCheck.checks.supabaseUrl}
+                  label="Convex URL"
+                  status={envCheck.checks.convexUrl}
                 />
                 <CheckItem
-                  label="Supabase Key"
-                  status={envCheck.checks.supabaseKey}
+                  label="Convex Site URL"
+                  status={envCheck.checks.convexSiteUrl}
+                />
+                <CheckItem
+                  label="JWT Private Key"
+                  status={envCheck.checks.jwtPrivateKey}
                 />
                 <CheckItem
                   label="Helius Key"

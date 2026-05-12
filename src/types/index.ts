@@ -69,6 +69,9 @@ export interface Trade {
   total_exit_sol: number;
   net_profit_sol: number;
   roi_percent: number;
+  total_fees_sol: number;
+  net_profit_usd?: number;
+  roi_multiplier?: number;
 
   // Tier & streak at trade time
   tier_at_trade: Tier;
@@ -195,6 +198,55 @@ export interface HeliusTransaction {
   swap?: SwapInfo;
 }
 
+export interface EnhancedTransaction {
+  description: string;
+  type: "SWAP";
+  source: string; // "JUPITER" | "RAYDIUM" | "ORCA" etc.
+  fee: number; // lamports
+  feePayer: string;
+  signature: string;
+  slot: number;
+  timestamp: number; // Unix timestamp
+
+  nativeTransfers: Array<{
+    fromUserAccount: string;
+    toUserAccount: string;
+    amount: number; // lamports
+  }>;
+
+  tokenTransfers: Array<{
+    fromUserAccount: string;
+    toUserAccount: string;
+    fromTokenAccount: string;
+    toTokenAccount: string;
+    tokenAmount: number;
+    mint: string;
+    tokenStandard?: string;
+  }>;
+
+  events: {
+    swap?: {
+      nativeInput?: { account: string; amount: string };
+      nativeOutput?: { account: string; amount: string };
+      tokenInputs: Array<{
+        userAccount: string;
+        tokenAccount: string;
+        mint: string;
+        rawTokenAmount: { tokenAmount: string; decimals: number };
+      }>;
+      tokenOutputs: Array<{
+        userAccount: string;
+        tokenAccount: string;
+        mint: string;
+        rawTokenAmount: { tokenAmount: string; decimals: number };
+      }>;
+      tokenFees: Array<unknown>;
+      nativeFees: Array<unknown>;
+      innerSwaps: Array<unknown>;
+    };
+  };
+}
+
 export interface TokenTransfer {
   fromUserAccount: string;
   toUserAccount: string;
@@ -202,7 +254,7 @@ export interface TokenTransfer {
   toTokenAccount: string;
   tokenAmount: number;
   mint: string;
-  tokenStandard: string;
+  tokenStandard?: string;
 }
 
 export interface NativeTransfer {
@@ -234,6 +286,13 @@ export interface SwapInfo {
   }>;
 }
 
+export interface SwapAmounts {
+  solSpent: number; // SOL spent buying tokens
+  solReceived: number; // SOL received selling tokens
+  tokenMint: string; // The non-SOL token involved
+  fee: number; // Transaction fee in SOL
+}
+
 export interface ParsedTrade {
   tokenMint: string;
   tokenSymbol?: string;
@@ -241,6 +300,9 @@ export interface ParsedTrade {
   totalExit: number;
   netProfit: number;
   roi: number;
+  roiMultiplier: number; // e.g., 2.5 for 150% ROI (1 + roi/100)
+  totalFeesSol: number; // total transaction fees paid
+  netProfitUsd?: number; // USD equivalent (optional, set during sync)
   positionClosed: boolean;
   positionOpenedAt?: Date;
   positionClosedAt: Date;
@@ -262,7 +324,8 @@ export interface AggregatedTrade {
   totalExitSol: number;
   netProfitSol: number;
   roi: number;
-  transactions: HeliusTransaction[];
+  totalFeesSol: number;
+  transactions: HeliusTransaction[] | EnhancedTransaction[];
   positionClosed: boolean;
   firstTransactionAt: Date;
   lastTransactionAt: Date;
@@ -298,6 +361,10 @@ export interface TradeRefreshResponse {
     trading: number;
     vault: number;
   };
+  closedTradesCount: number;
+  totalProfitSol: number;
+  totalProfitUsd: number;
+  solPrice: number;
 }
 
 export interface SyncResult {
@@ -308,6 +375,10 @@ export interface SyncResult {
     vault: number;
   };
   lastSyncTimestamp: string;
+  closedTradesCount: number;
+  totalProfitSol: number;
+  totalProfitUsd: number;
+  solPrice: number;
 }
 
 // Cashout Confirmation

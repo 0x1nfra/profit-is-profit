@@ -6,6 +6,7 @@
 import type {
   AggregatedTrade,
   HeliusTransaction,
+  EnhancedTransaction,
   ParsedTrade,
   TokenBalance,
 } from "@/types";
@@ -15,6 +16,7 @@ import {
   calculateNetProfit,
   calculateTradeROI,
   extractNativeTransfers,
+  extractSwapAmounts,
   extractTokenTransfers,
   extractUniqueTokenMints,
   getTransactionsByTokenMint,
@@ -34,13 +36,13 @@ import {
  * Parses an array of Helius transactions into trades
  * Groups transactions by token mint and aggregates entry/exit amounts
  *
- * @param transactions - Array of Helius transactions from the blockchain
+ * @param transactions - Array of Helius or Enhanced transactions from the blockchain
  * @param walletAddress - The wallet address these transactions belong to
  * @returns Array of parsed trades
  * @throws ValidationError if wallet address is invalid
  */
 export function parseTrades(
-  transactions: HeliusTransaction[],
+  transactions: (HeliusTransaction | EnhancedTransaction)[],
   walletAddress: string,
 ): ParsedTrade[] {
   // Validate wallet address
@@ -66,6 +68,7 @@ export function parseTrades(
     );
 
     if (aggregated) {
+      const roiMultiplier = 1 + (aggregated.roi / 100);
       parsedTrades.push({
         tokenMint: aggregated.tokenMint,
         tokenSymbol: aggregated.tokenSymbol,
@@ -73,6 +76,8 @@ export function parseTrades(
         totalExit: aggregated.totalExitSol,
         netProfit: aggregated.netProfitSol,
         roi: aggregated.roi,
+        roiMultiplier,
+        totalFeesSol: aggregated.totalFeesSol,
         positionClosed: aggregated.positionClosed,
         positionOpenedAt: aggregated.firstTransactionAt,
         positionClosedAt: aggregated.lastTransactionAt,
@@ -96,13 +101,13 @@ export function parseTrades(
  * - Net Profit: 4.1 SOL
  * - ROI: 128.125%
  *
- * @param transactions - Array of all Helius transactions
+ * @param transactions - Array of all Helius or Enhanced transactions
  * @param tokenMint - The specific token mint to aggregate
  * @param walletAddress - The wallet address
  * @returns Aggregated trade data or null if no relevant transactions
  */
 export function aggregateTokenTransactions(
-  transactions: HeliusTransaction[],
+  transactions: (HeliusTransaction | EnhancedTransaction)[],
   tokenMint: string,
   walletAddress: string,
 ): AggregatedTrade | null {
@@ -118,30 +123,46 @@ export function aggregateTokenTransactions(
 
   let totalEntrySol = 0;
   let totalExitSol = 0;
+  let totalFeesSol = 0;
 
   for (const tx of sortedTxs) {
-    // Get token transfers for this wallet
-    const tokenTransfers = extractTokenTransfers(tx, walletAddress);
+    // Check if this is an EnhancedTransaction (has events.swap)
+    if ('events' in tx && tx.events?.swap) {
+      // Enhanced API: use extractSwapAmounts
+      const swapAmounts = extractSwapAmounts(tx as import("@/types").EnhancedTransaction, walletAddress);
 
-    for (const transfer of tokenTransfers) {
-      // If we're receiving tokens (incoming), we spent SOL to get them
-      if (transfer.direction === "in") {
-        // For swaps, we need to calculate how much SOL was spent
-        if (isSwapTransaction(tx)) {
-          const solSpent = Math.abs(extractNativeTransfers(tx, walletAddress));
-          if (!handleDustAmounts(solSpent)) {
-            totalEntrySol += normalizeAmount(solSpent);
-          }
-        }
+      if (!handleDustAmounts(swapAmounts.solSpent)) {
+        totalEntrySol += normalizeAmount(swapAmounts.solSpent);
       }
 
-      // If we're sending tokens (outgoing), we received SOL for them
-      if (transfer.direction === "out") {
-        // For swaps, we need to calculate how much SOL was received
-        if (isSwapTransaction(tx)) {
-          const solReceived = extractNativeTransfers(tx, walletAddress);
-          if (solReceived > 0 && !handleDustAmounts(solReceived)) {
-            totalExitSol += normalizeAmount(solReceived);
+      if (swapAmounts.solReceived > 0 && !handleDustAmounts(swapAmounts.solReceived)) {
+        totalExitSol += normalizeAmount(swapAmounts.solReceived);
+      }
+
+      totalFeesSol += swapAmounts.fee;
+    } else {
+      // Legacy HeliusTransaction: use old extraction logic
+      const txFee = typeof tx.fee === 'number' ? tx.fee : 0;
+      totalFeesSol += txFee;
+
+      const tokenTransfers = extractTokenTransfers(tx as HeliusTransaction, walletAddress);
+
+      for (const transfer of tokenTransfers) {
+        if (transfer.direction === "in") {
+          if (isSwapTransaction(tx as HeliusTransaction)) {
+            const solSpent = Math.abs(extractNativeTransfers(tx as HeliusTransaction, walletAddress));
+            if (!handleDustAmounts(solSpent)) {
+              totalEntrySol += normalizeAmount(solSpent);
+            }
+          }
+        }
+
+        if (transfer.direction === "out") {
+          if (isSwapTransaction(tx as HeliusTransaction)) {
+            const solReceived = extractNativeTransfers(tx as HeliusTransaction, walletAddress);
+            if (solReceived > 0 && !handleDustAmounts(solReceived)) {
+              totalExitSol += normalizeAmount(solReceived);
+            }
           }
         }
       }
@@ -163,6 +184,7 @@ export function aggregateTokenTransactions(
     totalExitSol: normalizeAmount(totalExitSol),
     netProfitSol: normalizeAmount(netProfitSol),
     roi,
+    totalFeesSol: normalizeAmount(totalFeesSol),
     transactions: sortedTxs,
     positionClosed: false, // Will be determined separately
     firstTransactionAt,

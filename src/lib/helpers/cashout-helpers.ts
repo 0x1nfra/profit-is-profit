@@ -128,19 +128,18 @@ export function applyGoalBoost(
  * - Gap $201+: +20% boost
  */
 export function getGoalBoostForGap(gapAmount: number): number {
-  if (gapAmount <= 0) {
-    return 0; // No boost if on track or ahead
-  }
+  if (gapAmount <= 0) return 0;
 
   for (const level of GOAL_BOOST_LEVELS) {
-    if (level.maxGap === null || gapAmount <= level.maxGap) {
-      if (gapAmount >= level.minGap) {
-        return level.boostPercent;
-      }
+    const withinMax = level.maxGap === null || gapAmount <= level.maxGap;
+    if (gapAmount >= level.minGap && withinMax) {
+      return level.boostPercent;
     }
   }
 
-  return 0; // Default: no boost
+  // Should be unreachable given GOAL_BOOST_LEVELS covers all positive gaps.
+  // Throw to surface any future misconfiguration rather than silently returning 0.
+  throw new Error(`No boost level found for gap: ${gapAmount}`);
 }
 
 /**
@@ -196,10 +195,44 @@ export function validateCashoutInput(input: CashoutInput): ValidationResult {
 
 /**
  * Gets the base cashout rate for a given tier
- * 
+ *
  * @param tier - The tier to get base rate for
  * @returns Base cashout percentage for the tier
  */
 export function getBaseRate(tier: Tier): number {
   return TIER_CONFIG[tier].baseRate;
+}
+
+/**
+ * Computes the updated losing streak after processing a batch of trades.
+ *
+ * Trades are sorted ASCENDING by positionClosedAt (chronological order),
+ * then iterated:
+ * - Win (netProfitSol > 0): streak resets to 0
+ * - Loss (netProfitSol <= 0): streak increments by 1
+ *
+ * @param startingStreak - Current streak before the batch
+ * @param tradeResults - Trades to process; will be sorted internally
+ * @returns Final streak after all trades processed
+ *
+ * Implementation: Plan 02 (currently a RED stub).
+ */
+export function computeUpdatedStreak(
+  startingStreak: number,
+  tradeResults: Array<{ netProfitSol: number; positionClosedAt: string }>
+): number {
+  // Sort ASC by positionClosedAt (ISO 8601 strings sort correctly via localeCompare)
+  const sorted = [...tradeResults].sort((a, b) =>
+    a.positionClosedAt.localeCompare(b.positionClosedAt)
+  );
+
+  let streak = startingStreak;
+  for (const trade of sorted) {
+    if (trade.netProfitSol > 0) {
+      streak = 0; // Win resets
+    } else {
+      streak += 1; // Loss (or zero) increments
+    }
+  }
+  return streak;
 }

@@ -91,6 +91,12 @@ export const GOAL_BOOST_LEVELS = [
 ] as const;
 
 // =============================================
+// TOKEN CONSTANTS
+// =============================================
+
+export const WSOL_MINT = "So11111111111111111111111111111111111111112";
+
+// =============================================
 // CALCULATION CONSTANTS
 // =============================================
 
@@ -103,6 +109,26 @@ export const CALCULATION = {
   MIN_WALLET_FLOOR_SOL: 0.1,
   // Dust threshold for token balance (Section 4.3)
   DUST_THRESHOLD: 0.000001,
+} as const;
+
+// =============================================
+// CASHOUT CAP (Phase 3 — CASH-07)
+// Hard cap on final cashout percentage to prevent over-extraction
+// on mega wins (e.g., Tier 5 + 200% ROI + 20% goal boost = 96% uncapped).
+// CASHOUT_CAP_PERCENT is imported by cashout-calculator.ts in Step 5b.
+// =============================================
+
+export const CASHOUT_CAP_PERCENT = 65; // Maximum final cashout percentage
+
+// =============================================
+// ROI DISPLAY CONSTANTS
+// =============================================
+
+export const ROI_DISPLAY = {
+  // Cap display for airdrop sells
+  MAX_ROI_PERCENT: 9999,
+  // Decimal places for multiplier (e.g., 2.5x)
+  MULTIPLIER_PRECISION: 1,
 } as const;
 
 // =============================================
@@ -122,6 +148,8 @@ export const DEFAULTS = {
 export const HELIUS_CONFIG = {
   // Base URL for Helius API
   API_BASE_URL: "https://mainnet.helius-rpc.com",
+  // Enhanced API base URL
+  ENHANCED_API_BASE_URL: "https://api-mainnet.helius-rpc.com",
   // Rate limit: max requests per second
   RATE_LIMIT: 10,
   // Max retries for failed requests
@@ -136,4 +164,10 @@ export const HELIUS_CONFIG = {
   DEFAULT_TX_LIMIT: 100,
   // Maximum limit for transaction history
   MAX_TX_LIMIT: 1000,
+  // Default swap limit for Enhanced API
+  DEFAULT_SWAP_LIMIT: 100,
+  // Maximum backfill transactions
+  MAX_BACKFILL_TRANSACTIONS: 500,
+  // Wait between backfill pages
+  BACKFILL_RATE_LIMIT_MS: 200,
 } as const;
